@@ -13,12 +13,24 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id String @id @default(uuid())
+  email String @unique
+  password String 
+  created_at DateTime @default(now())
+
+  websites Website[]
+}
+
 model Website {
   id        String @id @default(uuid())
   url       String
-  timeAdded DateTime @default(now())
+  time_added DateTime @default(now())
+  user_id   String
 
   ticks     WebsiteTicks[] // 1-M ( 1 website many ticks )
+  user      User @relation(fields: [user_id], references: [id])
+
 }
 
 model Region {
@@ -40,6 +52,7 @@ model WebsiteTicks {
   region_id        String
   status           WebsiteStatus
   response_time_ms Int
+  created_at       DateTime @default(now())
 
   website          Website @relation(fields: [website_id], references: [id])
   region           Region   @relation(fields: [region_id], references: [id])
