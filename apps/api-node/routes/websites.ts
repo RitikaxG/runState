@@ -48,7 +48,8 @@ websitesRouter.post("/", async (req : Request, res : Response ) => {
     try{
         const newWebsite = await prisma.website.create({
             data : {
-                url 
+                url,
+                userId : "1"
             }
         })
         return res.status(201).json({

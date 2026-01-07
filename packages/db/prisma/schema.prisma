@@ -13,24 +13,42 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model User {
   id String @id @default(uuid())
+  role Role
   email String @unique
   password String 
-  created_at DateTime @default(now())
+  createdAt DateTime @default(now())
 
   websites Website[]
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id String @id @default(uuid())
+  userId String 
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  revoked Boolean @default(false)
+  tokenHash String @unique
+
+  user User @relation(fields: [userId], references: [id])
+  @@index([userId])
+ 
 }
 
 model Website {
   id        String @id @default(uuid())
-  url       String
-  time_added DateTime @default(now())
-  user_id   String
-
+  url       String @unique
+  timeAdded DateTime @default(now())
+  userId   String
   ticks     WebsiteTicks[] // 1-M ( 1 website many ticks )
-  user      User @relation(fields: [user_id], references: [id])
-
+  user      User @relation(fields: [userId], references: [id])
 }
 
 model Region {
@@ -48,13 +66,16 @@ enum WebsiteStatus {
 
 model WebsiteTicks {
   id               String @id @default(uuid())
-  website_id       String
-  region_id        String
+  websiteId        String
+  regionId         String
   status           WebsiteStatus
-  response_time_ms Int
-  created_at       DateTime @default(now())
+  responseTimeMs   Int
+  createdAt        DateTime @default(now())
 
-  website          Website @relation(fields: [website_id], references: [id])
-  region           Region   @relation(fields: [region_id], references: [id])
+  website          Website @relation(fields: [websiteId], references: [id])
+  region           Region   @relation(fields: [regionId], references: [id])
 
+  @@index([websiteId])
+  @@index([regionId])
+  @@index([createdAt])
 }
