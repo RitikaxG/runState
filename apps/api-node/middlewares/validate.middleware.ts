@@ -1,6 +1,7 @@
 import { ZodSchema } from "zod";
 import type { Request, Response, NextFunction } from "express";
 import { error } from "console";
+import { AppError } from "../utils/appError";
 
 
 /*  
@@ -18,10 +19,7 @@ export const validateMiddleware = ( schema : ZodSchema) =>
                 message : err.message
             }))
 
-            return res.status(422).json({
-                message : "Invalid request body",
-                errors : errors
-            })
+            return next(new AppError("Invalid request body",422))
         }
         req.body = result.data;
         next();

@@ -4,12 +4,17 @@
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@repo/db":"*"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
-  "exports":{
-    ".":"./index.ts"
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@types/express": "^5.0.6",
+    "express": "^5.2.1"
   }
 }

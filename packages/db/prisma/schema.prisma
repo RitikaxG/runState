@@ -38,17 +38,20 @@ model RefreshToken {
   tokenHash String @unique
 
   user User @relation(fields: [userId], references: [id])
+
   @@index([userId])
  
 }
 
 model Website {
   id        String @id @default(uuid())
-  url       String @unique
+  url       String 
   timeAdded DateTime @default(now())
-  userId   String
+  userId    String
   ticks     WebsiteTicks[] // 1-M ( 1 website many ticks )
   user      User @relation(fields: [userId], references: [id])
+
+  @@unique([userId,url])
 }
 
 model Region {

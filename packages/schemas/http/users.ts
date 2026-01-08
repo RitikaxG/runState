@@ -1,7 +1,6 @@
-import { password } from "bun";
 import {z} from "zod";
 
-export const SignupSchema = z.object({
+export const signupSchema = z.object({
     email : z.string().min(3).max(30).email({message : "Invalid email format"}),
     password : z.string().min(8).max(32)
                     .refine((password) => /[A-Z]/.test(password), {
@@ -16,4 +15,9 @@ export const SignupSchema = z.object({
                     .refine((password) => /[!@#$%^&*]/.test(password),{
                         message : "Must have atleast one special character"
                     })
+})
+
+export const signinSchema = z.object({
+    email : z.string().email(),
+    password : z.string().min(1,{ message : "Password cannot be empty"})
 })

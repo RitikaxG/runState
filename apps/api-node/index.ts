@@ -1,12 +1,24 @@
-import express from "express";
-import { websitesRouter } from "./routes/websites";
-import "dotenv/config";
+import { app } from "./app";
+import { seedAdmin } from "./seed/seedAdmin";
+import { prisma } from "@repo/db/client";
+import dotenv from "dotenv";
+dotenv.config();
 
-const app = express();
+async function startServer (){
+    try{
+        await prisma.$connect();
+        console.log("DB connected");
 
-app.use(express.json());
-app.use("/api/v1/websites",websitesRouter);
+        await seedAdmin();
+       
 
-app.listen(3000,() => {
-    console.log("Listening on port 3000");
-})
+        app.listen(3000,() => {
+            console.log("Listening on port 3000");
+        })
+    }catch(err){
+        console.error(`Server failed to start ${err}`);
+        process.exit(1)
+    }
+}
+
+startServer();
