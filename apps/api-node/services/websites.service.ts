@@ -1,5 +1,6 @@
 import { websiteRepo } from "../repositories/websites.repo";
 import { Role } from "@repo/db/client";
+import { AppError } from "../utils/appError";
 
 export const websiteService = {
     create : async (input : {
@@ -29,7 +30,7 @@ export const websiteService = {
         // Since we care about the result to validate user, promise is awaited
         const website = await websiteRepo.getById(input.websiteId);
         if (!website){
-            throw new Error(`Website not found`);
+            throw new AppError(`Website not found`,403);
         }
 
         // ADMIN override
@@ -39,7 +40,7 @@ export const websiteService = {
 
         // Ownership check
         if(website.userId !== input.userId){
-            throw new Error("Unauthorised : not the website owner")
+            throw new AppError("Unauthorised : not the website owner",403)
         }
 
 

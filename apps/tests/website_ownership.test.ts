@@ -1,15 +1,16 @@
 import axios from "axios";
 import { describe, it, expect } from "bun:test";
+import { BACKEND_NODE_URL } from "./config";
+import { generateUrls } from "./admin_list_delete_users.test";
 
-const BASE_URL = `http://localhost:3001`;
 
 describe("RBAC - Website Ownership", () =>{
     let userAToken : string;
     let userBToken : string;
     let websiteIdA : string;
     it("signin user A", async() =>{
-        const res = await axios.post(`${BASE_URL}/api/v1/signin`,{
-            email : "ritika2@gmail.com",
+        const res = await axios.post(`${BACKEND_NODE_URL}/api/v1/signin`,{
+            email : "ritikag@gmail.com",
             password : "A@a123456"
         })
 
@@ -17,8 +18,8 @@ describe("RBAC - Website Ownership", () =>{
     })
 
     it("signin user B", async () => {
-        const res = await axios.post(`${BASE_URL}/api/v1/signin`,{
-            email : "ritika3@gmail.com",
+        const res = await axios.post(`${BACKEND_NODE_URL}/api/v1/signin`,{
+            email : "ritikagg1@gmail.com",
             password : "A@a123456"
         })
 
@@ -26,20 +27,21 @@ describe("RBAC - Website Ownership", () =>{
     })
 
     it("user A creates website",async () =>{
-        const res = await axios.post(`${BASE_URL}/api/v1/websites`,{
-            url : "https://examples1.com"
+        const res = await axios.post(`${BACKEND_NODE_URL}/api/v1/websites`,{
+            url : generateUrls()
         },{
             headers : {
                 Authorization : `Bearer ${userAToken}`
             }
         })
         console.log(res.data.data);
-        websiteIdA = res.data.data.ID;
+        websiteIdA = res.data.data.ID || res.data.data.id;
     })
+
     it("user B cannot delete user A website", async () => {
         expect.assertions(1)
         try {
-            await axios.delete(`${BASE_URL}/api/v1/websites/${websiteIdA}`,{
+            await axios.delete(`${BACKEND_NODE_URL}/api/v1/websites/${websiteIdA}`,{
                 headers : {
                     Authorization : `Bearer ${userBToken}`
                 }
@@ -49,8 +51,9 @@ describe("RBAC - Website Ownership", () =>{
             expect(err.response.status).toBe(403)
         }
     })
+    
     it("user A can delete its own website", async () => {
-        const res = await axios.delete(`${BASE_URL}/api/v1/websites/${websiteIdA}`, {
+        const res = await axios.delete(`${BACKEND_NODE_URL}/api/v1/websites/${websiteIdA}`, {
             headers : {
                 Authorization : `Bearer ${userAToken}`
             }

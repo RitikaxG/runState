@@ -1,7 +1,6 @@
 import { describe, it, expect } from "bun:test";
 import axios from "axios";
-
-const BASE_URL = `http://localhost:3001`;
+import { BACKEND_NODE_URL } from "./config";
 
 describe("AUTH - Refresh Token Flow", () => {
     let accessToken : string;
@@ -10,8 +9,8 @@ describe("AUTH - Refresh Token Flow", () => {
     let newRefreshToken : string;
 
     it("signin user and receive token pair", async () => {
-        const res = await axios.post(`${BASE_URL}/api/v1/signin`,{
-            email : "ritika9@gmail.com",
+        const res = await axios.post(`${BACKEND_NODE_URL}/api/v1/signin`,{
+            email : "ritikag@gmail.com",
             password : "A@a123456",
         })
 
@@ -24,7 +23,7 @@ describe("AUTH - Refresh Token Flow", () => {
     })
 
     it("refresh token should return new token pair", async () => {
-        const res = await axios.post(`${BASE_URL}/api/v1/auth/refresh`,{
+        const res = await axios.post(`${BACKEND_NODE_URL}/api/v1/auth/refresh`,{
             refresh_token : refreshToken,
         })
 
@@ -39,7 +38,7 @@ describe("AUTH - Refresh Token Flow", () => {
     it("old refresh token should be invalid after rotation", async () => {
         expect.assertions(1);
         try{
-            await axios.post(`${BASE_URL}/api/v1/auth/refresh`,{
+            await axios.post(`${BACKEND_NODE_URL}/api/v1/auth/refresh`,{
                 refresh_token: refreshToken,
             })
         }
@@ -49,7 +48,7 @@ describe("AUTH - Refresh Token Flow", () => {
     })
 
     it("logout should revoke refresh token", async () => {
-        const res = await axios.post(`${BASE_URL}/api/v1/auth/logout`,{
+        const res = await axios.post(`${BACKEND_NODE_URL}/api/v1/auth/logout`,{
             refresh_token : newRefreshToken,
         })
 
@@ -59,7 +58,7 @@ describe("AUTH - Refresh Token Flow", () => {
     it("revoked refresh token should not work", async () => {
         expect.assertions(1);
         try{
-            await axios.post(`${BASE_URL}/api/v1/auth/refresh`,{
+            await axios.post(`${BACKEND_NODE_URL}/api/v1/auth/refresh`,{
                 refresh_token : newRefreshToken,
             })
         }

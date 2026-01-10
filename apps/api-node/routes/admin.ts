@@ -7,7 +7,7 @@ import { Role } from "@repo/db/client";
 const adminRouter = Router();
 
 // 1. Authentication Required
-adminRouter.use(authMiddleware);
+adminRouter.use(authMiddleware());
 
 // 2. Authorization ( Admin only )
 adminRouter.use(requireRoleMiddleware(Role.ADMIN))

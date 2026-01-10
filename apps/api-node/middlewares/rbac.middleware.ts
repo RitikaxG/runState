@@ -5,7 +5,7 @@ import { AppError } from "../utils/appError";
 export const requireRoleMiddleware = ( ...roles : Role[] ) => {
     return ( req : Request, res : Response, next : NextFunction ) => {
         if(!req.user){
-            return(new AppError("Unauthorised : no user found",401));
+            return next(new AppError("Unauthorised : no user found",401));
         }
 
         if(!roles.includes(req.user.role)){

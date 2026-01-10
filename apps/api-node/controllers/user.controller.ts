@@ -44,7 +44,7 @@ export const userController = {
     listUsers : async (req : Request, res : Response, next : NextFunction ) => {
         try{
             const users = await userService.listUsers();
-            res.status(201).json({
+            res.status(200).json({
                 success : true,
                 message : "Successfully listed users",
                 data : users

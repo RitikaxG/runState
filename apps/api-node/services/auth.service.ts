@@ -3,6 +3,7 @@ import { generateAccessToken } from "../utils/jwt";
 import { generateRefreshToken, hashRefreshToken } from "../utils/refreshToken";
 import { refreshTokenRepo } from "../repositories/refresh_tokens.repo";
 import { userService } from "./user.service";
+import { AppError } from "../utils/appError";
 
 const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000; // 14 Days
 
@@ -34,8 +35,8 @@ export const authService = {
         })
 
         return {
-            accessToken,
-            refreshToken,
+            access_token : accessToken,
+            refresh_token : refreshToken,
             user
         }
     },
@@ -47,7 +48,7 @@ export const authService = {
         // 1. Validate Refresh Token
         const storedToken = await refreshTokenRepo.findValid(tokenHash);
         if(!storedToken){
-            throw new Error("Invalid refresh token");
+            throw new AppError("Invalid refresh token",401);
         }
 
         // 2. Revoke old token ( ROTATION )
@@ -78,8 +79,8 @@ export const authService = {
         })
 
         return {
-            accessToken,
-            refreshToken : newRefreshToken,
+            access_token : accessToken,
+            refresh_token : newRefreshToken,
         }
     },
 
