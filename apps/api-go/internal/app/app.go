@@ -23,7 +23,7 @@ func BuildServer() *gin.Engine {
 	r := gin.Default()
 
 	dbConn := db.NewPostgres(os.Getenv("DATABASE_URL"))
-
+	log.Println(os.Getenv("DATABASE_URL"))
 	env := os.Getenv("APP_ENV")
 
 	if env == "dev" || env == "local" {
