@@ -19,7 +19,7 @@ describe("RBAC - Website Ownership", () =>{
 
     it("signin user B", async () => {
         const res = await axios.post(`${BACKEND_NODE_URL}/api/v1/signin`,{
-            email : "ritikagg1@gmail.com",
+            email : "ritikagg@gmail.com",
             password : "A@a123456"
         })
 

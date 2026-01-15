@@ -50,6 +50,7 @@ model Website {
   userId    String
   ticks     WebsiteTicks[] // 1-M ( 1 website many ticks )
   user      User @relation(fields: [userId], references: [id])
+  currentStatus WebsiteStatus?
 
   @@unique([userId,url])
 }
