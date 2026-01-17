@@ -1,5 +1,5 @@
 import type { WebsiteCheckInput } from "./types";
-import { setCurrentStatus } from "@repo/redis";
+import { setCurrentStatus, xAddStatusChange } from "@repo/redis";
 import { getWebsiteStatus, getPreviousStatus } from "./status";
 import axios from "axios";
 import { prisma } from "@repo/db/client";
@@ -67,5 +67,11 @@ export const checkAndUpdateStatus = async (input : WebsiteCheckInput ) => {
         })
 
         await setCurrentStatus(input.websiteId,status);
+        const res = await xAddStatusChange(
+            input.websiteId,
+            previousStatus ?? "unknown",
+            status
+        )
+        console.log(res);
     }
 }

@@ -14,7 +14,7 @@ export const getPreviousStatus = async (websiteId : string)  => {
     if(cachedStatus !== null){
         return cachedStatus;
     }
-
+    console.log(cachedStatus);
     // 2. Fallback to DB ( Get details for website with id : websiteId )
     const website = await prisma.website.findUnique({
         where : {
@@ -24,8 +24,9 @@ export const getPreviousStatus = async (websiteId : string)  => {
             currentStatus : true
         }
     })
-
+    console.log(website?.currentStatus);
     if(website?.currentStatus){
+        
         await setCurrentStatus(websiteId,website.currentStatus);
         return website.currentStatus;
     }

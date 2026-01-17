@@ -6,10 +6,10 @@ dotenv.config({
 });
 
 const envSchema = z.object({
-    STREAM_NAME : z.string().min(1),
-    REGION_NAME : z.string().min(1),
-    REGION_ID : z.string().min(1),
-    WORKER_ID : z.string().min(1)
+    MONITORING_STREAM : z.string().min(1),
+    MONITORING_REGION_NAME : z.string().min(1),
+    MONITORING_REGION_ID : z.string().min(1),
+    MONITORING_WORKER_ID : z.string().min(1)
 })
 
 export const env = envSchema.parse(process.env);

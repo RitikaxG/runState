@@ -2,20 +2,25 @@ import { ensureConsumerGroup, xAck, xReadGroup } from "@repo/redis";
 import { checkAndUpdateStatus } from "./checker";
 import { env } from "./env";
 
-const STREAM_NAME = env.STREAM_NAME;
-const REGION_ID = env.REGION_ID;
-const REGION_NAME = env.REGION_NAME;
-const WORKER_ID = env.WORKER_ID;
-console.log(`Starting worker ${WORKER_ID} with stream ${STREAM_NAME} at region ${REGION_ID} ${REGION_NAME}`)
+const MONITORING_STREAM = env.MONITORING_STREAM;
+const MONITORING_REGION_ID = env.MONITORING_REGION_ID;
+const MONITORING_REGION_NAME = env.MONITORING_REGION_NAME;
+const MONITORING_WORKER_ID = env.MONITORING_WORKER_ID;
+console.log(`Starting worker ${MONITORING_WORKER_ID} with stream ${MONITORING_STREAM} at region ${MONITORING_REGION_ID} ${MONITORING_REGION_NAME}`)
 
 // Worker function
 export async function startWorker(){
     
-    await ensureConsumerGroup(STREAM_NAME, REGION_NAME);
+    await ensureConsumerGroup(MONITORING_STREAM, MONITORING_REGION_NAME);
     
     while(true){
         // Read from Stream
-        const res = await xReadGroup(REGION_NAME,WORKER_ID);
+        const res = await xReadGroup(
+            MONITORING_STREAM,
+            MONITORING_REGION_NAME,
+            MONITORING_WORKER_ID
+        );
+       
         if(!res){
             continue;
         }
@@ -31,8 +36,8 @@ export async function startWorker(){
                 try{
                     await checkAndUpdateStatus({
                         websiteId : message.websiteId,
-                        url : message.url,
-                        regionId : REGION_ID
+                        url : message.url!,
+                        regionId : MONITORING_REGION_ID
                     });
                     return id;
                 }catch(err){
@@ -48,7 +53,7 @@ export async function startWorker(){
             const ackIds = ((await Promise.all((tasks))).filter(Boolean) as string[]);
             console.log(ackIds);
             if(ackIds.length){
-                await xAck(REGION_NAME,ackIds); // Redis removes them from pending list
+                await xAck( MONITORING_STREAM,MONITORING_REGION_NAME,ackIds); // Redis removes them from pending list
             }
 
         }

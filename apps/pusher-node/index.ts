@@ -2,7 +2,6 @@ import { prisma } from "@repo/db/client";
 import { xAddBulk  } from "@repo/redis";
 
 const INTERVAL_MS = 3*1000*60;
-const BATCH_SIZE = 500;
 const sleep = ( ms : number ) => {
     return new Promise((res) => setTimeout(res,ms));
 }

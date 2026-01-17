@@ -1,27 +1,20 @@
 import { client } from "./client";
 import dotenv from "dotenv";
+import type { StreamResponse, WebsiteEvent } from "./types";
 dotenv.config({
     path : "./packages/redis/.env"
 });
 
 
-
-
-const STREAM_NAME = process.env.STREAM_NAME as string;
-console.log(STREAM_NAME);
-
-if(!STREAM_NAME){
+const MONITORING_STREAM = process.env.MONITORING_STREAM as string;
+console.log(MONITORING_STREAM);
+if(!MONITORING_STREAM){
     throw new Error("Stream name not found");
-}
-
-interface WebsiteEvent {
-    websiteId : string,
-    url : string
 }
 
 const xAdd = async ( websiteId : string, url : string ) => {
     await client.xAdd(
-        STREAM_NAME,"*",{
+        MONITORING_STREAM,"*",{
             websiteId,
             url
         },{
@@ -34,6 +27,7 @@ const xAdd = async ( websiteId : string, url : string ) => {
     )
 }   
 
+
 export const xAddBulk = async ( websites : WebsiteEvent[], batchSize = 200 ) => {
     for(let i=0;i<websites.length;i+=batchSize){
         const batch = websites.slice(i,i+batchSize);
@@ -44,27 +38,16 @@ export const xAddBulk = async ( websites : WebsiteEvent[], batchSize = 200 ) => 
     }
 }
 
-type StreamMessage = {
-    id : string, // redis msg id
-    message : {
-        websiteId : string,
-        url : string
-    }
-}
-
-type StreamResponse = {
-    name : string,
-    messages : StreamMessage[]
-}
 
 export const xReadGroup = async ( 
+    stream : string,
     consumerGroup : string, 
     workerId : string ) : Promise<StreamResponse[] | null> => {
 
     const res = await client.xReadGroup(
         consumerGroup,
         workerId,{
-            key : STREAM_NAME,
+            key : stream,
             id : ">"
         },{
             COUNT : 5,
@@ -75,16 +58,14 @@ export const xReadGroup = async (
 }
 
 // Add retry logic if it fails
-export const xAck = async ( consumerGroup : string, messageIds : string[] | string ) => {
+export const xAck = async ( stream: string, consumerGroup : string, messageIds : string[] | string ) => {
     const ids = Array.isArray(messageIds) ? messageIds : [messageIds];
     await client.xAck(
-        STREAM_NAME,
+        stream,
         consumerGroup,
         ids
     )
 }
-
-
 
 
 export const ensureConsumerGroup = async (stream : string, consumerGroup : string) => {

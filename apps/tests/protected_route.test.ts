@@ -32,7 +32,7 @@ describe('Protected Route', () => {
 
  it("succeeds with token", async () => {
     const res = await axios.post(`${BACKEND_NODE_URL}/api/v1/websites`,{
-        url : generateUrls()
+        url : "https://www.google.com"
     },{
         headers : {
             Authorization : `Bearer ${accessToken}`

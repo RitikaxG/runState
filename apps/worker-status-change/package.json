@@ -1,0 +1,17 @@
+{
+  "name": "worker-status-change",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@repo/redis":"*",
+    "@repo/db":"*"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3"
+  }
+}
