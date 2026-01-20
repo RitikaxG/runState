@@ -51,15 +51,15 @@ This document describes how the Monitoring Worker processes website monitoring t
   (up, down, unknown, etc.).
 
 ### Fetch Previous Status
-- The previous status is first fetched from Redis using the key: `website:<websiteId>:status`
+- The previous status is first fetched from Redis using the key:            -       `website:<websiteId>:status`
 - If not found in Redis, the status is fetched from the database and cached in Redis.
 
 ### Persist Monitoring Data
 - A new record is inserted into the `websiteTicks` table containing:
-- `status`
-- `responseTimeMs`
-- `websiteId`
-- `regionId`
+    - `status`
+    - `responseTimeMs`
+    - `websiteId`
+    - `regionId`
 
 ---
 
@@ -92,8 +92,8 @@ This document describes how the Monitoring Worker processes website monitoring t
 - Only messages that are successfully processed are acknowledged.
 
 - After all concurrent checks complete:
-- The worker filters successful tasks.
-- Corresponding message IDs are acknowledged using `XACK`.
+    - The worker filters successful tasks.
+    - Corresponding message IDs are acknowledged using `XACK`.
 
 - This guarantees at-least-once processing.
 
@@ -102,8 +102,8 @@ This document describes how the Monitoring Worker processes website monitoring t
 ## 8. In-Flight Job Tracking
 
 - The worker maintains an `inFlight` counter:
-- Incremented when a task starts.
-- Decremented when the task completes.
+    - Incremented when a task starts.
+    - Decremented when the task completes.
 
 - This helps track active work during shutdown.
 
@@ -112,8 +112,8 @@ This document describes how the Monitoring Worker processes website monitoring t
 ## 9. Graceful Shutdown
 
 - On receiving a shutdown signal:
-- The worker stops reading new messages.
-- It waits for all in-flight jobs to complete.
+    - The worker stops reading new messages.
+    - It waits for all in-flight jobs to complete.
 
 - A configurable shutdown timeout prevents hanging indefinitely.
 
