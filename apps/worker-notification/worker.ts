@@ -12,14 +12,19 @@ console.log(`Starting notification worker ${NOTIFICATION_WORKER_ID} on ${NOTIFIC
 const sleep = (ms : number) => {
     return new Promise(res => setTimeout(res,ms));
 }
+
+let isRunning = true;
+let inFlight = 0;
+
 const startReclaimLoop = async () => {
-    while(true){
+    while(isRunning){
         try{
-            await reclaimPendingNotification(
+            const res = await reclaimPendingNotification(
                 NOTIFICATION_STREAM,
                 NOTIFICATION_CONSUMER_GROUP,
                 NOTIFICATION_WORKER_ID
             )
+            console.log(res);
         }catch(err){
             console.error(`Reclaim failed`,err);
         }
@@ -29,7 +34,7 @@ const startReclaimLoop = async () => {
 }
 
 // Consumes STATUS_CHANGE events and decide what action should be taken
-export async function startWorker(){
+export async function runWorker(){
     
     await ensureConsumerGroup(
         NOTIFICATION_STREAM, 
@@ -38,13 +43,14 @@ export async function startWorker(){
 
     startReclaimLoop();
     
-    while(true){
+    while(isRunning){
         // Read from Stream
         const res = await xReadGroup(
             NOTIFICATION_STREAM,
             NOTIFICATION_CONSUMER_GROUP,
             NOTIFICATION_WORKER_ID
         );
+        console.log(`Read from betteruptime:website-status-notification`,res);
         if(!res){
             await sleep(1000);
             continue;
@@ -65,6 +71,7 @@ export async function startWorker(){
                         return;
                 }
 
+                inFlight++;
                 try{
                     
                     const result = await sendNotification(id,{
@@ -77,6 +84,7 @@ export async function startWorker(){
                     // Only ACK messages that were actually handled
                     if(result === "SENT" || result === "DLQ"){
                         ackIds.push(id);
+                        console.log(id);
                     }
 
                     
@@ -84,6 +92,8 @@ export async function startWorker(){
                     console.error("Notification Worker failed",
                                     message.websiteId,
                                     err);
+                }finally{
+                    inFlight--;
                 }
             }))
 
@@ -101,3 +111,30 @@ export async function startWorker(){
         
     }
 }
+
+export const workerStats = {
+    getInflight: () => inFlight
+}
+
+
+export const startWorker = Object.assign(runWorker,{
+    
+    async stop(){
+        const SHUTDOWN_TIMEOUT = 10000;
+        const start = Date.now();
+        
+        console.log(`Worker ${NOTIFICATION_WORKER_ID} stop requested`);
+        isRunning = false;
+
+        // Wait for inflight jobs 
+        while(inFlight > 0){
+            if(Date.now() - start > SHUTDOWN_TIMEOUT){
+                console.log(`Forcing shutdown with inflight jobs ${inFlight}`);
+                break;
+            }
+            console.log(`Waiting for ${inFlight} in flight jobs`);
+            await sleep(500);
+        }
+        console.log("Worker shutdown complete");
+    }
+})

@@ -10,11 +10,11 @@ export const getWebsiteStatus = (statusCode : number | null) : WebsiteStatus => 
 
 export const getPreviousStatus = async (websiteId : string)  => {
     // 1. First Try Redis
-    const cachedStatus = await getPreviousStatusRedis(websiteId);
-    if(cachedStatus !== null){
-        return cachedStatus;
-    }
-    console.log(cachedStatus);
+    // const cachedStatus = await getPreviousStatusRedis(websiteId);
+    // if(cachedStatus !== null){
+    //     return cachedStatus;
+    // }
+    // console.log(cachedStatus);
     // 2. Fallback to DB ( Get details for website with id : websiteId )
     const website = await prisma.website.findUnique({
         where : {

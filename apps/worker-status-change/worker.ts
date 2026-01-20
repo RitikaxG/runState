@@ -7,24 +7,31 @@ const STATUS_CHANGE_CONSUMER_GROUP = "status-change-group";
 
 console.log(`Starting worker ${STATUS_CHANGE_WORKER_ID} with stream ${STATUS_CHANGE_STREAM} at region ${STATUS_CHANGE_CONSUMER_GROUP}`)
 
+let isRunning = true;
+let inFlight = 0;
+
+const sleep = (ms : number ) => {
+    return new Promise(res => setTimeout(res,ms));
+}
+
 // Consumes STATUS_CHANGE events and decide what action should be taken
-export async function startWorker(){
+export async function runWorker(){
     
     await ensureConsumerGroup(
         STATUS_CHANGE_STREAM, 
         STATUS_CHANGE_CONSUMER_GROUP
     );
     
-    while(true){
+    while(isRunning){
         // Read from Stream
         const res = await xReadGroup(
             STATUS_CHANGE_STREAM,
             STATUS_CHANGE_CONSUMER_GROUP,
             STATUS_CHANGE_WORKER_ID
         );
-        if(!res){
-            await new Promise(res => setTimeout(res,100))
-            console.log(res);
+
+        if(!res || res.length === 0){
+            await sleep(100);
             continue;
         }
         
@@ -36,23 +43,29 @@ export async function startWorker(){
              - Each promise represents one website check
             */
             const tasks = messages.map(async ({ id, message }) => {
+                inFlight++;
                 try{
                     if(!message.prevStatus || !message.currentStatus
                         || !message.occurredAt
                     ){
+                        console.error(`Invalid worker status stream input message`);
                         return null;
                     }
 
-                    await xAddNotifyStream({
+                    const res = await xAddNotifyStream({
                         websiteId : message.websiteId,
                         prevStatus : message.prevStatus,
                         currentStatus : message.currentStatus,
                         occurredAt : message.occurredAt
                     });
+                    console.log(`Added to notification stream`,res);
                     return id;
                 }catch(err){
                     console.error("Status Change Worker failed",message.websiteId,err);
                     return null;
+                    
+                }finally{
+                    inFlight--;
                 }
             })
 
@@ -69,3 +82,24 @@ export async function startWorker(){
         }
     }
 }
+
+export const startWorker = Object.assign(runWorker,{
+    async stop(){
+        const SHUTDOWN_TIMEOUT = 10000;
+        const start = Date.now();
+
+        console.log(`Worker ${env.STATUS_CHANGE_WORKER_ID} requested shutdown.`);
+        isRunning = false;
+        
+
+        while(inFlight > 0){
+            if(Date.now() - start > SHUTDOWN_TIMEOUT){
+                console.log(`Forced shutdown with ${inFlight} in flight jobs`);
+                break;
+            }
+            console.log(`Waiting for ${inFlight} in-flight jobs`);
+            await sleep(500);
+        }
+        console.log(`Worker shutdown complete.`)
+    }
+})

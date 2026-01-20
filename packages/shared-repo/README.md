@@ -1,4 +1,4 @@
-# alerting-node
+# shared-repo
 
 To install dependencies:
 

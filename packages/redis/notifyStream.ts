@@ -7,7 +7,7 @@ if(!NOTIFICATION_STREAM){
 }
 
 export const xAddNotifyStream = async ( msg : NotificationMessage) => {
-    await client.xAdd(
+    const res = await client.xAdd(
         NOTIFICATION_STREAM,"*",{
             websiteId : msg.websiteId,
             regionId : msg.regionId ?? "",
@@ -22,4 +22,5 @@ export const xAddNotifyStream = async ( msg : NotificationMessage) => {
             }
         }
     )
+    return res;
 }

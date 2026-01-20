@@ -27,5 +27,5 @@ export const userRepo = {
                 id : userId
             }
         })
-    }
+    },
 }

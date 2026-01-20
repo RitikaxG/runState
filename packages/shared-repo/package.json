@@ -1,12 +1,16 @@
 {
-  "name": "alerting-node",
+  "name": "@repo/shared-repo",
   "module": "index.ts",
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@repo/db":"*"
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "exports" : {
+    "." : "./index.ts"
   }
 }

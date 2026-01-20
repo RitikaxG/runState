@@ -4,6 +4,8 @@ import { env } from "./env";
 import { channels } from "./channels";
 import { getStatusEventType } from "./utils/statusEventType";
 import { DEFAULT_RULES } from "./rules";
+import { websiteService } from "@repo/shared-repo";
+import { logNotification } from "./logger";
 
 const NOTIFICATION_STREAM = env.NOTIFICATION_STREAM;
 const MAX_TRIES = 5;
@@ -20,22 +22,32 @@ export const sendNotification = async (
             msg.prevStatus,
             msg.currentStatus
         )
-
+        console.log(`Website Status`,statusEventType);
         if(statusEventType === null){
+            logNotification({
+                websiteId : msg.websiteId,
+                status : "NO_OP"
+            })
             return "NO_OP";
         }
 
-        // 2. Check if notification already sent ( pre message )
-        const canSendNotification = await markAsSentOnce(
+         // 2. Check mark notification sent ( pre message )
+        const marked = await markAsSentOnce(
             msg.websiteId,
             statusEventType
         )
 
-        if(!canSendNotification){
+        if(!marked){
+            logNotification({
+                websiteId : msg.websiteId,
+                eventType : statusEventType,
+                status : "ALREADY_SENT"
+            })
             return "ALREADY_SENT";
         }
-
+        
         let sent = false;
+        let userEmail : string | null = null;
 
         // 3. Apply rules
         for(const rule of DEFAULT_RULES){
@@ -53,6 +65,12 @@ export const sendNotification = async (
            )
 
            if(limited){
+            logNotification({
+                websiteId : msg.websiteId,
+                channel : rule.channel,
+                eventType : statusEventType,
+                status : "THROTTLED"
+            })
             continue;
            }
 
@@ -60,25 +78,57 @@ export const sendNotification = async (
             // 5. Send notification
 
             const channel = channels[rule.channel];
+            console.log(`Using channel ${channel} to send notification`);
             if(!channel){
                 console.warn(`Channel not registered ${rule.channel}`);
                 continue;
             }
+
+            if(!userEmail){
+                userEmail = await websiteService.resolveUserEmailForWebsite(
+                    msg.websiteId
+                );
+                console.log(`User email to whom notification will be sent : `,userEmail);
+            }
+            
+
             await channels[rule.channel]!.send({
                 websiteId : msg.websiteId,
                 eventType : statusEventType,
-                occurredAt : msg.occurredAt
+                occurredAt : msg.occurredAt,
+                email : userEmail
             })
             sent = true;
+
+            if(!sent){
+                logNotification({
+                    websiteId : msg.websiteId,
+                    status : "NO_OP",
+                    eventType : statusEventType
+                })
+            }
+            logNotification({
+                websiteId : msg.websiteId,
+                eventType : statusEventType,
+                channel : rule.channel,
+                status : "SENT"
+            })
         }
 
-        return sent ? "SENT" : "NO_OP";
+       
+        return "SENT";
 
     }catch(err){
-
+        
         // 6. Retry Logic
         const retries = await incrementRetry(messageId);
-
+        logNotification({
+            messageId,
+            websiteId : msg.websiteId,
+            status : "FAILED",
+            retries : retries.toString(),
+            reason : (err as Error).message
+        })
         if(retries >= MAX_TRIES){
             await pushToDlq(NOTIFICATION_STREAM,{
                 messageId,
@@ -89,6 +139,12 @@ export const sendNotification = async (
                 retries : retries.toString(),
                 reason: "Max retries exceeded"
             });
+            logNotification({
+                messageId,
+                websiteId : msg.websiteId,
+                status : "DLQ",
+                retries : retries.toString()
+            })
             return "DLQ";
         }
 

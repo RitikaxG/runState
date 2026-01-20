@@ -8,12 +8,19 @@ const MONITORING_REGION_NAME = env.MONITORING_REGION_NAME;
 const MONITORING_WORKER_ID = env.MONITORING_WORKER_ID;
 console.log(`Starting worker ${MONITORING_WORKER_ID} with stream ${MONITORING_STREAM} at region ${MONITORING_REGION_ID} ${MONITORING_REGION_NAME}`)
 
+let isRunning = true;
+let inFlight = 0;
+
+const sleep = ( ms : number ) => {
+    return new Promise(res => setTimeout(res,ms));
+}
+
 // Worker function
-export async function startWorker(){
+export async function runWorker(){
     
     await ensureConsumerGroup(MONITORING_STREAM, MONITORING_REGION_NAME);
     
-    while(true){
+    while(isRunning){
         // Read from Stream
         const res = await xReadGroup(
             MONITORING_STREAM,
@@ -33,6 +40,7 @@ export async function startWorker(){
              - Each promise represents one website check
             */
             const tasks = messages.map(async ({ id, message }) => {
+                inFlight++;
                 try{
                     await checkAndUpdateStatus({
                         websiteId : message.websiteId,
@@ -43,6 +51,8 @@ export async function startWorker(){
                 }catch(err){
                     console.error("Worker failed",message.websiteId,err);
                     return null;
+                }finally{
+                    inFlight--;
                 }
             })
 
@@ -59,6 +69,28 @@ export async function startWorker(){
         }
     }
 }
+
+export const startWorker = Object.assign(runWorker,{
+    
+    async stop(){
+        const SHUTDOWN_TIMEOUT = 10000;
+        const start = Date.now();
+        
+        console.log(`Worker ${MONITORING_WORKER_ID} stop requested`);
+        isRunning = false;
+
+        // Wait for inflight jobs 
+        while(inFlight > 0){
+            if(Date.now() - start > SHUTDOWN_TIMEOUT){
+                console.log(`Forcing shutdown with inflight jobs ${inFlight}`);
+                break;
+            }
+            console.log(`Waiting for ${inFlight} in flight jobs`);
+            await sleep(500);
+        }
+        console.log("Worker shutdown complete");
+    }
+})
 
 
 

@@ -8,5 +8,6 @@ export interface NotificationChannel {
 export type NotificationPayload = {
     websiteId : string,
     eventType : "DOWN" | "RECOVERY",
-    occurredAt : string
+    occurredAt : string,
+    email : string
 }

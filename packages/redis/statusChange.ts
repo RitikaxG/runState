@@ -15,7 +15,7 @@ export const xAddStatusChange = async (
             websiteId,
             prevStatus,
             currentStatus,
-            occuredAt : new Date().toISOString()
+            occurredAt : new Date().toISOString()
         },{
             TRIM : {
                 strategy : "MAXLEN",

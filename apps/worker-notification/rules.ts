@@ -17,7 +17,7 @@ export type NotificationRule = {
 export const DEFAULT_RULES : NotificationRule[] = [
     {
         channel : "email",
-        notifyOn : "DOWN",
+        notifyOn : "BOTH",
         target : ADMIN_EMAIL,
         enabled : true
     }

@@ -1,6 +1,5 @@
-import { ZodSchema } from "zod";
+import { z } from "zod";
 import type { Request, Response, NextFunction } from "express";
-import { error } from "console";
 import { AppError } from "../utils/appError";
 
 
@@ -9,12 +8,12 @@ import { AppError } from "../utils/appError";
     - validateMiddleware(schema) : Returns a middleware function
     - The returned function -> runs for every request
 */
-export const validateMiddleware = ( schema : ZodSchema) => 
+export const validateMiddleware = ( schema : z.ZodType ) => 
     (req : Request, res : Response, next : NextFunction) => {
 
         const result = schema.safeParse(req.body);
         if(!result.success){
-            const errors = result.error.errors.map((err) => ({
+            const errors = result.error.issues.map((err) => ({
                 field : err.path.join("."),
                 message : err.message
             }))
