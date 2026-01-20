@@ -7,7 +7,10 @@ export const setCurrentStatus = async (
     await client.set(
         `website:${websiteId}:status`,
         status,
-        { EX : 60*10
+        { expiration : {
+            type : "EX",
+            value : 60*10
+        }
         });
 }
 

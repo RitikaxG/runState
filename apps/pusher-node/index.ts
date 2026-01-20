@@ -2,6 +2,8 @@ import { prisma } from "@repo/db/client";
 import { xAddBulk  } from "@repo/redis";
 
 const INTERVAL_MS = 3*1000;
+let isRunning = true;
+let shuttingDown = false;
 const sleep = ( ms : number ) => {
     return new Promise((res) => setTimeout(res,ms));
 }
@@ -35,7 +37,7 @@ setInterval() : does not wait for async function
 */
 
 async function start(){
-    while(true){
+    while(isRunning){
         try{
             await main();
         }catch(err){
@@ -47,3 +49,40 @@ async function start(){
 }
 
 start();
+
+const HEARTBEAT_INTERVAL = 10000;
+const heartBeat = setInterval(()=>{
+
+    console.log(JSON.stringify({
+        service : "worker-monitoring-pusher",
+        status : "ALIVE",
+        timestamp : new Date().toISOString()
+    }))
+
+},HEARTBEAT_INTERVAL);
+
+const shutDown = ( signal : string ) => {
+    if(shuttingDown) return;
+    shuttingDown = true;
+
+    console.log(JSON.stringify({
+        service : "worker-monitoring-pusher",
+        status : "STOPPING",
+        signal,
+        timestamp : new Date().toISOString()
+    }))
+
+    isRunning = false;
+
+    clearInterval(heartBeat);
+    console.log(JSON.stringify({
+        service : "worker-monitoring-pusher",
+        status : "STOPPED",
+        timestamp : new Date().toISOString()
+    }))
+
+    process.exit(0);
+}
+
+process.on("SIGINT",shutDown);
+process.on("SIGTERM",shutDown);
