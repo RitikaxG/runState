@@ -1,5 +1,5 @@
 import type { NotificationMessage } from "@repo/redis";
-import { incrementRetry, markAsSentOnce, pushToDlq, shouldThrottle } from "@repo/redis";
+import { incrementRetry, isAlreadySent, markAsSentOnce, pushToDlq, shouldThrottle } from "@repo/redis";
 import { env } from "./env";
 import { channels } from "./channels";
 import { getStatusEventType } from "./utils/statusEventType";
@@ -31,13 +31,13 @@ export const sendNotification = async (
             return "NO_OP";
         }
 
-         // 2. Check mark notification sent ( pre message )
-        const marked = await markAsSentOnce(
+         // 2. Check mark notification sent ( per message ) / Idempoteny Check
+        const alreadySent = await isAlreadySent(
             msg.websiteId,
             statusEventType
         )
 
-        if(!marked){
+        if(alreadySent){
             logNotification({
                 websiteId : msg.websiteId,
                 eventType : statusEventType,
@@ -46,7 +46,7 @@ export const sendNotification = async (
             return "ALREADY_SENT";
         }
         
-        let sent = false;
+        let sentAtLeastOnce = false;
         let userEmail : string | null = null;
 
         // 3. Apply rules
@@ -58,13 +58,13 @@ export const sendNotification = async (
             }
 
            // 4. Rate Limit per notification per channel
-           const limited = await shouldThrottle(
+           const throttled = await shouldThrottle(
                 msg.websiteId,
                 rule.channel,
                 statusEventType
            )
 
-           if(limited){
+           if(throttled){
             logNotification({
                 websiteId : msg.websiteId,
                 channel : rule.channel,
@@ -98,15 +98,8 @@ export const sendNotification = async (
                 occurredAt : msg.occurredAt,
                 email : userEmail
             })
-            sent = true;
+            sentAtLeastOnce = true;
 
-            if(!sent){
-                logNotification({
-                    websiteId : msg.websiteId,
-                    status : "NO_OP",
-                    eventType : statusEventType
-                })
-            }
             logNotification({
                 websiteId : msg.websiteId,
                 eventType : statusEventType,
@@ -115,8 +108,16 @@ export const sendNotification = async (
             })
         }
 
+        if(sentAtLeastOnce){
+            await markAsSentOnce(
+                msg.websiteId,
+                statusEventType
+            )
+            return "SENT";
+        }
+
        
-        return "SENT";
+        return "NO_OP";
 
     }catch(err){
         

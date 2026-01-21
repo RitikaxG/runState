@@ -17,3 +17,11 @@ export const markAsSentOnce = async (
 
     return res === "OK";
 }
+
+export const isAlreadySent = async (
+    websiteId : string,
+    statusEventType : "RECOVERY" | "DOWN"
+) => {
+    const res = await client.get(`notification:sent:${websiteId}:${statusEventType}`);
+    return res === "1";
+}
