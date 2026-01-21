@@ -15,3 +15,7 @@ export const incrementRetry = async ( id : string ) => {
     }
     return count;
 }
+
+export const resetRetry  = async (id : string ) => {
+    await client.del(`notification:retry:${id}`);
+}
