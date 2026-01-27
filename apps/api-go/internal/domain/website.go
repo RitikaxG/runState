@@ -45,3 +45,11 @@ type Website struct {
 	URL       string    `db:"url"`
 	TimeAdded time.Time `db:"time_added"`
 }
+
+type WebsiteStatus string
+
+const (
+	WebsiteUp      WebsiteStatus = "up"
+	WebsiteDown    WebsiteStatus = "down"
+	WebsiteUnknown WebsiteStatus = "unknown"
+)

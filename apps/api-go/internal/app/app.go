@@ -1,7 +1,9 @@
 package app
 
 import (
+	"context"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
@@ -10,6 +12,7 @@ import (
 	"github.com/RitikaxG/runState/apps/api-go/internal/db/seed"
 	"github.com/RitikaxG/runState/apps/api-go/internal/handlers"
 	"github.com/RitikaxG/runState/apps/api-go/internal/http/middleware"
+	"github.com/RitikaxG/runState/apps/api-go/internal/redis"
 	"github.com/RitikaxG/runState/apps/api-go/internal/repository"
 	"github.com/RitikaxG/runState/apps/api-go/internal/routes"
 	"github.com/RitikaxG/runState/apps/api-go/internal/service"
@@ -17,13 +20,46 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/jmoiron/sqlx"
 )
 
-func BuildServer() *gin.Engine {
+type App struct {
+	Server *http.Server // http.Server : enables graceful shutdown
+	Redis  *redis.Redis
+	DB     *sqlx.DB
+
+	ctx    context.Context
+	Cancel context.CancelFunc
+}
+
+func BuildServer() (*App, error) {
+	/* Creates a root context for the entire app
+
+	- Creates a cancel function ( cancel )
+	- Any code holding context can :
+		* check when the app is shutting down.
+		* stop work gracefully
+	- Calling cancel() broadcasts a shutdown signal
+
+	*/
+	ctx, cancel := context.WithCancel(context.Background())
+
 	r := gin.Default()
 
 	dbConn := db.NewPostgres(os.Getenv("DATABASE_URL"))
 	log.Println(os.Getenv("DATABASE_URL"))
+
+	redisClient, err := redis.NewRedis(os.Getenv("REDIS_ADDR"))
+	if err != nil {
+		cancel()
+		return nil, err
+	}
+
+	server := &http.Server{
+		Addr:    ":3001",
+		Handler: r,
+	}
+
 	env := os.Getenv("APP_ENV")
 
 	if env == "dev" || env == "local" {
@@ -78,5 +114,11 @@ func BuildServer() *gin.Engine {
 		validation.RegisterPasswordValidator(v)
 	}
 
-	return r
+	return &App{
+		Server: server,
+		Redis:  redisClient,
+		DB:     dbConn, // dbConn later
+		ctx:    ctx,
+		Cancel: cancel,
+	}, nil
 }
