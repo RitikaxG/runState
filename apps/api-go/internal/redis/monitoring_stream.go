@@ -37,8 +37,8 @@ func (r *Redis) xAddMonitoringEvent(
 		- map[string]interface{} : means keys must be string, values can be any type
 		*/
 		Values: map[string]interface{}{
-			"websiteId": websiteID, // "websiteId" : Redis field, websiteID : Go field
-			"url":       url,
+			"website_id": websiteID, // "websiteId" : Redis field, websiteID : Go field
+			"url":        url,
 		},
 		MaxLen: 200_000,
 		Approx: true, // strategy modifier
@@ -47,7 +47,7 @@ func (r *Redis) xAddMonitoringEvent(
 	return r.Client.XAdd(ctx, args).Err()
 }
 
-func (r *Redis) xAddBulkMonitoringStream(
+func (r *Redis) XAddBulkMonitoringStream(
 	ctx context.Context,
 	stream string,
 	websites []domain.WebsiteEvent,
@@ -105,7 +105,7 @@ func (r *Redis) xAddBulkMonitoringStream(
 	return nil
 }
 
-func (r *Redis) xReadGroup(
+func (r *Redis) XReadGroup(
 	ctx context.Context,
 	stream string,
 	consumerGroup string,
@@ -159,7 +159,7 @@ func (r *Redis) xReadGroup(
 
 				If websiteId exists and is a string assign it
 			*/
-			if v, ok := msg.Values["websiteId"].(string); ok {
+			if v, ok := msg.Values["website_id"].(string); ok {
 				payload.WebsiteID = v
 			}
 
@@ -188,7 +188,7 @@ func (r *Redis) xReadGroup(
 	return responses, nil
 }
 
-func (r *Redis) xAck(
+func (r *Redis) XAck(
 	ctx context.Context,
 	stream string,
 	consumerGroup string,
@@ -207,7 +207,7 @@ func (r *Redis) xAck(
 	return err
 }
 
-func (r *Redis) ensureConsumerGroup(
+func (r *Redis) EnsureConsumerGroup(
 	ctx context.Context,
 	stream string,
 	consumerGroup string,

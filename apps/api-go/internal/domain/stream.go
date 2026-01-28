@@ -1,32 +1,21 @@
 package domain
 
+// Redis Stream hash payloads do not have any tags
+
 type StreamPayload struct {
-	WebsiteID     string         `json:"website_id"`
-	URL           *string        `json:"url"`
-	PrevStatus    *WebsiteStatus `json:"prev_status"`
-	CurrentStatus *WebsiteStatus `json:"current_status"`
-	OccurredAt    *string        `json:"occurred_at"`
+	WebsiteID     string
+	URL           *string
+	PrevStatus    *WebsiteStatus
+	CurrentStatus *WebsiteStatus
+	OccurredAt    *string
 }
 
 type StreamMessage struct {
-	ID      string        `json:"id"`
-	Message StreamPayload `json:"message"`
+	ID      string
+	Message StreamPayload
 }
 
 type StreamResponse struct {
-	Name    string          `json:"name"`
-	Message []StreamMessage `json:"messages"`
-}
-
-type WebsiteEvent struct {
-	WebsiteID string `json:"website_id"`
-	URL       string `json:"url"`
-}
-
-type NotificationMessage struct {
-	WebsiteID     string        `json:"website_id"`
-	RegionID      *string       `json:"region_id"`
-	PrevStatus    WebsiteStatus `json:"prev_status"`
-	CurrentStatus WebsiteStatus `json:"current_status"`
-	OccurredAt    string        `json:"occurred_at"`
+	Name    string
+	Message []StreamMessage
 }

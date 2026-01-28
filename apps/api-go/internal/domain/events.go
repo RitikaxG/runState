@@ -1,14 +1,16 @@
 package domain
 
+// Redis Stream hash payloads do not have any tags
+
 type WebsiteEvent struct {
-	WebsiteID string `json:"website_id"`
-	URL       string `json:"url"`
+	WebsiteID string
+	URL       string
 }
 
 type NotificationMessage struct {
-	WebsiteID     string        `json:"website_id"`
-	RegionID      *string       `json:"region_id"`
-	PrevStatus    WebsiteStatus `json:"prev_status"`
-	CurrentStatus WebsiteStatus `json:"current_status"`
-	OccurredAt    string        `json:"occurred_at"`
+	WebsiteID     string
+	RegionID      *string
+	PrevStatus    WebsiteStatus
+	CurrentStatus WebsiteStatus
+	OccurredAt    string
 }

@@ -25,7 +25,7 @@ func (r *Redis) SetCurrentStatus(
 	).Err()
 }
 
-func (r *Redis) getPreviousStatusRedis(
+func (r *Redis) GetPreviousStatusRedis(
 	ctx context.Context,
 	websiteId string,
 ) (*domain.WebsiteStatus, error) {
