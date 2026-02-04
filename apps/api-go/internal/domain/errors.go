@@ -20,4 +20,5 @@ var (
 	ErrUnauthorized        = errors.New("Unauthorized")
 	ErrWebsiteNotFound     = errors.New("website not found")
 	ErrInvalidRefreshToken = errors.New("invalid refresh token")
+	ErrTicksInputNotFound  = errors.New("websiteID or regionID not found")
 )

@@ -110,3 +110,15 @@ func (s *WebsiteService) DeleteWebsite(
 	}
 	return s.repo.DeleteByIdAndUserId(ctx, websiteID, userID)
 }
+
+func (s *WebsiteService) ListAllWebsites(
+	ctx context.Context,
+) ([]domain.Website, error) {
+
+	websites, err := s.repo.ListAllWebsites(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return websites, nil
+}

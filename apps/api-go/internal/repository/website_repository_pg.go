@@ -193,3 +193,18 @@ func (r *websiteRepository) DeleteByID(
 	}
 	return nil
 }
+
+func (r *websiteRepository) ListAllWebsites(
+	ctx context.Context,
+) ([]domain.Website, error) {
+	query := `
+	SELECT * FROM website
+	`
+
+	var websites []domain.Website
+	if err := r.db.SelectContext(ctx, &websites, query); err != nil {
+		return nil, err
+	}
+
+	return websites, nil
+}
