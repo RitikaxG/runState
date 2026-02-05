@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/RitikaxG/runState/apps/api-go/internal/domain"
 	"github.com/jmoiron/sqlx"
@@ -207,4 +208,31 @@ func (r *websiteRepository) ListAllWebsites(
 	}
 
 	return websites, nil
+}
+
+func (r *websiteRepository) UpdateWebsiteStatus(
+	ctx context.Context,
+	websiteId string,
+	status domain.WebsiteStatus,
+) error {
+	query := `
+	UPDATE website
+	SET current_status = $1
+	WHERE id = $2
+	`
+
+	res, err := r.db.ExecContext(ctx, query, status, websiteId)
+	if err != nil {
+		return err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
 }

@@ -49,4 +49,5 @@ type WebsiteRepository interface {
 	DeleteByIdAndUserId(ctx context.Context, websiteID string, userID string) error
 	GetByID(ctx context.Context, websiteID string) (*domain.Website, error)
 	ListAllWebsites(ctx context.Context) ([]domain.Website, error)
+	UpdateWebsiteStatus(ctx context.Context, websiteId string, status domain.WebsiteStatus) error
 }

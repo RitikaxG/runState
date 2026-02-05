@@ -122,3 +122,11 @@ func (s *WebsiteService) ListAllWebsites(
 
 	return websites, nil
 }
+
+func (s *WebsiteService) UpdateWebsiteStatus(
+	ctx context.Context,
+	websiteId string,
+	status domain.WebsiteStatus,
+) error {
+	return s.repo.UpdateWebsiteStatus(ctx, websiteId, status)
+}

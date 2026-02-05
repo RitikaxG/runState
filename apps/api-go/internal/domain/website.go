@@ -40,10 +40,11 @@ HOW IT WORKS ?
 5. Handler returns JSON → uses the exported fields.
 */
 type Website struct {
-	ID        string    `db:"id"`
-	UserID    string    `db:"user_id"`
-	URL       string    `db:"url"`
-	TimeAdded time.Time `db:"time_added"`
+	ID            string         `db:"id"`
+	UserID        string         `db:"user_id"`
+	URL           string         `db:"url"`
+	TimeAdded     time.Time      `db:"time_added"`
+	CurrentStatus *WebsiteStatus `db:"current_status"` // optional
 }
 
 type WebsiteStatus string
