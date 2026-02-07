@@ -46,7 +46,7 @@ func main() {
 		httpClient,
 	)
 
-	// ----------- Engine --------------
+	// ------------------ Engine ---------------------
 	engine := worker.NewEngine(
 		redisClient,
 		os.Getenv("MONITORING_STREAM"),
