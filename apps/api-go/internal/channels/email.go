@@ -13,6 +13,12 @@ type EmailChannel struct {
 	sender string
 }
 
+/*
+	 `NewEmailChannel` Constructor :
+		- Creates a Mailgun Client using API key.
+		- Inject all config at startup
+		- Return ready to use EmailChannel object that implements NotificationChannel interface
+*/
 func NewEmailChannel(
 	apiKey string,
 	domain string,
@@ -40,7 +46,9 @@ func (ec *EmailChannel) Send(
 		payload.OccurredAt,
 	)
 
+	// Creating a Mailgun message
 	msg := mailgun.NewMessage(
+		ec.domain,
 		ec.sender,
 		subject,
 		body,

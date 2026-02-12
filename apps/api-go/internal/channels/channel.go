@@ -20,6 +20,9 @@ type NotificationPayload struct {
 	Target string
 }
 
+/*
+All Channels must implement Send(ctx, payload) (string,error)
+*/
 type NotificationChannel interface {
 	Send(ctx context.Context, payload NotificationPayload) (string, error)
 }

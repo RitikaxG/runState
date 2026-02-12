@@ -2,7 +2,6 @@ package seed
 
 import (
 	"errors"
-	"log"
 	"os"
 
 	"github.com/jmoiron/sqlx"
@@ -14,8 +13,6 @@ import (
 func SeedAdmin(db *sqlx.DB) error {
 	adminEmail := os.Getenv("ADMIN_EMAIL")
 	adminPassword := os.Getenv("ADMIN_PASSWORD")
-	log.Println(adminEmail)
-	log.Println(adminPassword)
 
 	if adminEmail == "" || adminPassword == "" {
 		return errors.New("ADMIN_EMAIL or ADMIN_PASSWORD not set")

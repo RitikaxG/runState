@@ -17,6 +17,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// Bootstraps and runs the Notification Worker as a long-running service with graceful shutdown.
 func main() {
 
 	_ = godotenv.Load()
@@ -31,6 +32,7 @@ func main() {
 
 	websiteRepo := repository.NewWebsiteRepository(dbConn)
 
+	// Channel Registry ( Notification Channels )
 	channelRegistry := channels.ChannelRegistry{
 		domain.ChannelEmail: channels.NewEmailChannel(
 			os.Getenv("MAILGUN_API_KEY"),

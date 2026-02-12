@@ -3,9 +3,13 @@ package notificationworker
 import (
 	"encoding/json"
 	"log"
+	"maps"
 	"time"
 )
 
+/*
+Structured Logger layer for notification worker
+*/
 type NotificationStatus string
 
 const (
@@ -21,13 +25,16 @@ const (
 func LogNotification(
 	fields map[string]string,
 ) {
+	// Create a new map to avoid mutating the original fields map
 	logFields := make(map[string]string, len(fields)+2)
-	for k, v := range fields {
-		logFields[k] = v
-	}
+
+	// Copies all key-value pairs from the input fields to the new logFields map
+	maps.Copy(logFields, fields)
+
 	logFields["service"] = "worker-notification"
 	logFields["timestamp"] = time.Now().UTC().Format(time.RFC3339)
 
+	// Convert the logFields map to a JSON string for structured logging
 	b, _ := json.Marshal(logFields)
 	log.Println(string(b))
 }

@@ -7,7 +7,8 @@ Channel Registry is a map where
 	- key : type of notification channel
 	- value : object that knows how to send notification
 
-Any struct that implements Send(ctx, payload) (string, error) can be stored in the registry
+Any struct that implements NotificationChannel [ Send(ctx, payload) (string, error) ]
+can be stored in the registry
 */
 
 type ChannelRegistry map[domain.NotificationChannelType]NotificationChannel
