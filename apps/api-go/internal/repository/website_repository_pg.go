@@ -236,3 +236,23 @@ func (r *websiteRepository) UpdateWebsiteStatus(
 	}
 	return nil
 }
+
+func (r *websiteRepository) GetUserEmailByWebsiteID(
+	ctx context.Context,
+	websiteId string,
+) (string, error) {
+	query := `
+	SELECT u.email
+	FROM website w
+	JOIN users u ON w.user_id = u.id
+	WHERE w.id = $1
+	`
+
+	var email string
+	err := r.db.GetContext(ctx, &email, query, websiteId)
+	if err != nil {
+		return "", err
+	}
+
+	return email, nil
+}

@@ -5,14 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/RitikaxG/runState/apps/api-go/internal/domain"
 	goredis "github.com/redis/go-redis/v9"
-)
-
-type StatusType string
-
-const (
-	StatusRecovery StatusType = "RECOVERY"
-	StatusDown     StatusType = "DOWN"
 )
 
 const notificationSentTTL = 7 * 24 * time.Hour
@@ -20,7 +14,7 @@ const notificationSentTTL = 7 * 24 * time.Hour
 func (r *Redis) MarkAsSentOnce(
 	ctx context.Context,
 	websiteId string,
-	statusType StatusType,
+	statusType domain.EventType,
 ) (bool, error) {
 	key := fmt.Sprintf("notification:sent:%s:%s", websiteId, statusType)
 
@@ -41,7 +35,7 @@ func (r *Redis) MarkAsSentOnce(
 func (r *Redis) IsAlreadySent(
 	ctx context.Context,
 	websiteId string,
-	statusType StatusType,
+	statusType domain.EventType,
 ) (bool, error) {
 
 	key := fmt.Sprintf("notification:sent:%s:%s", websiteId, statusType)

@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"time"
+
+	"github.com/RitikaxG/runState/apps/api-go/internal/domain"
 )
 
 func (r *Redis) ShouldThrottle(
 	ctx context.Context,
 	websiteId string,
-	statusType StatusType,
+	statusType domain.EventType,
 	channel string,
 ) (bool, error) {
 	key := fmt.Sprintf("rate:%s:%s:%s", websiteId, channel, statusType)

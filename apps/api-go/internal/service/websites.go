@@ -130,3 +130,10 @@ func (s *WebsiteService) UpdateWebsiteStatus(
 ) error {
 	return s.repo.UpdateWebsiteStatus(ctx, websiteId, status)
 }
+
+func (s *WebsiteService) GetUserEmailByWebsiteID(
+	ctx context.Context,
+	websiteId string,
+) (string, error) {
+	return s.repo.GetUserEmailByWebsiteID(ctx, websiteId)
+}

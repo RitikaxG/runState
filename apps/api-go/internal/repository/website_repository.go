@@ -50,4 +50,5 @@ type WebsiteRepository interface {
 	GetByID(ctx context.Context, websiteID string) (*domain.Website, error)
 	ListAllWebsites(ctx context.Context) ([]domain.Website, error)
 	UpdateWebsiteStatus(ctx context.Context, websiteId string, status domain.WebsiteStatus) error
+	GetUserEmailByWebsiteID(ctx context.Context, websiteID string) (string, error)
 }
