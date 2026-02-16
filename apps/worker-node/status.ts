@@ -15,7 +15,7 @@ export const getPreviousStatus = async (websiteId : string)  => {
         return cachedStatus;
     }
     console.log(cachedStatus);
-    // 2. Fallback to DB ( Get details for website with id : websiteId )
+    // 2. Fallback to DB ( Getg details for website with id : websiteId )
     const website = await prisma.website.findUnique({
         where : {
             id : websiteId

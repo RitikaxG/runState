@@ -2,6 +2,7 @@ package monitoringworker
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/RitikaxG/runState/apps/api-go/internal/domain"
@@ -25,6 +26,9 @@ type MonitoringWorker struct {
 	// Concrete implementation are passed by pointer
 	redis      *redis.Redis
 	httpClient *http.Client
+
+	// TESTING ONLY
+	forceNextStatus map[string]domain.WebsiteStatus
 }
 
 func NewMonitoringWorker(
@@ -42,6 +46,7 @@ func NewMonitoringWorker(
 		websiteTickRepo:    websiteTickRepo,
 		redis:              redis,
 		httpClient:         httpClient,
+		forceNextStatus:    make(map[string]domain.WebsiteStatus),
 	}
 }
 
@@ -71,6 +76,13 @@ func (mw *MonitoringWorker) Handle(
 		URL:       *msg.Message.URL,
 		RegionID:  mw.regionID,
 	}
+
+	log.Printf(
+		"CHECK website=%s url=%s region=%s",
+		input.WebsiteID,
+		input.URL,
+		input.RegionID,
+	)
 
 	return mw.CheckAndUpdateStatus(ctx, input)
 }

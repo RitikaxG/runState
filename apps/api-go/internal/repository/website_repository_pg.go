@@ -121,7 +121,7 @@ func (r *websiteRepository) GetByID(
 ) (*domain.Website, error) {
 
 	query := `
-	SELECT id , url, user_id, time_added
+	SELECT id , url, user_id, time_added, current_status
 	FROM website 
 	WHERE id = $1
 	`

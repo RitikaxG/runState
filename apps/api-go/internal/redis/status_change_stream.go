@@ -20,8 +20,8 @@ func (r *Redis) XAddStatusChangeStream(
 		ID:     "*",
 		Values: map[string]interface{}{
 			"website_id":     websiteId,
-			"prev_status":    prevStatus,
-			"current_status": currentStatus,
+			"prev_status":    string(prevStatus),
+			"current_status": string(currentStatus),
 			"occurred_at":    time.Now().UTC().Format(time.RFC3339),
 		},
 		MaxLen: 100_000,

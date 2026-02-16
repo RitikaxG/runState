@@ -2,6 +2,8 @@ package domain
 
 import "time"
 
+// Redis Stream hash payloads do not have any tags
+
 type DLQMessage struct {
 	MessageID     string
 	WebsiteID     string

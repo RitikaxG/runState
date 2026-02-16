@@ -30,6 +30,7 @@ export const websiteController = {
             if(!websiteId){
                 return next(new AppError("WebsiteId not found",400))
             }
+            
             const {id : userId, role } = req.user!;
 
             await websiteService.delete({

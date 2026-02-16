@@ -37,7 +37,7 @@ func main() {
 		domain.ChannelEmail: channels.NewEmailChannel(
 			os.Getenv("MAILGUN_API_KEY"),
 			os.Getenv("MAILGUN_DOMAIN"),
-			"Mailgun Sandbox <postmaster@"+os.Getenv("MAILGUN_DOMAIN")+">",
+			os.Getenv("MAILGUN_SENDER"),
 		),
 		domain.ChannelWebhook: channels.NewWebhookChannel(),
 	}

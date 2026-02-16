@@ -1,7 +1,7 @@
 import jwt  from "jsonwebtoken";
 import dotenv from "dotenv";
 import type { JWTPayload } from "@repo/types";
-import crypto from "crypto";
+
 
 dotenv.config();
 
@@ -13,9 +13,6 @@ export const generateAccessToken = (payload : JWTPayload) => {
     });
 };
 
-export const generateRefreshToken = (payload : JWTPayload) => {
-    return crypto.randomBytes(32).toString("base64url")
-};
 
 export const validateAccessToken = (token : string) => {
     return jwt.verify(token,JWT_SECRET) as JWTPayload;

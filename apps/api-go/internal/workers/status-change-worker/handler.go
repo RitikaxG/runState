@@ -2,6 +2,7 @@ package statuschangeworker
 
 import (
 	"context"
+	"log"
 
 	"github.com/RitikaxG/runState/apps/api-go/internal/domain"
 	"github.com/RitikaxG/runState/apps/api-go/internal/redis"
@@ -30,20 +31,34 @@ func (sw *StatusChangeWorker) Handle(
 	ctx context.Context,
 	msg domain.StreamMessage,
 ) error {
-	if msg.Message.PrevStatus == nil ||
-		msg.Message.CurrentStatus == nil ||
-		msg.Message.OccurredAt == nil {
-		return nil
-	}
 
-	return sw.redis.XAddNotificationStream(
+	log.Printf("[status-change-worker] received message: %+v", msg.Message)
+
+	notification := domain.NotificationMessage{
+		WebsiteID:     msg.Message.WebsiteID,
+		PrevStatus:    *msg.Message.PrevStatus,
+		CurrentStatus: *msg.Message.CurrentStatus,
+		OccurredAt:    *msg.Message.OccurredAt,
+	}
+	log.Println(notification)
+
+	err := sw.redis.XAddNotificationStream(
 		ctx,
 		sw.notifyStream,
-		domain.NotificationMessage{
-			WebsiteID:     msg.Message.WebsiteID,
-			PrevStatus:    *msg.Message.PrevStatus,
-			CurrentStatus: *msg.Message.CurrentStatus,
-			OccurredAt:    *msg.Message.OccurredAt,
-		},
+		notification,
 	)
+	if err != nil {
+		log.Printf("[status-change-worker] failed to add notification (website_id=%s, prev=%s, curr=%s): %v",
+			notification.WebsiteID,
+			notification.PrevStatus,
+			notification.CurrentStatus,
+			err)
+		return err
+	}
+	log.Printf("[status-change-worker] notification added (website_id=%s, %s → %s)",
+		notification.WebsiteID,
+		notification.PrevStatus,
+		notification.CurrentStatus,
+	)
+	return nil
 }

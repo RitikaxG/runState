@@ -1,8 +1,8 @@
 package notificationworker
 
 type NotificationRule struct {
-	Channel  string
-	NotifyOn string
+	Channel  string // "email", "webhook"
+	NotifyOn string // "DOWN" | "RECOVERY" | "BOTH"
 	Target   string
 	Enabled  bool
 }

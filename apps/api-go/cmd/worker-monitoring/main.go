@@ -10,6 +10,7 @@ import (
 
 	worker "github.com/RitikaxG/runState/apps/api-go/internal/common-worker"
 	"github.com/RitikaxG/runState/apps/api-go/internal/db"
+	"github.com/RitikaxG/runState/apps/api-go/internal/domain"
 	"github.com/RitikaxG/runState/apps/api-go/internal/redis"
 	"github.com/RitikaxG/runState/apps/api-go/internal/repository"
 	monitoringworker "github.com/RitikaxG/runState/apps/api-go/internal/workers/monitoring-worker"
@@ -44,6 +45,11 @@ func main() {
 		websiteTickRepo,
 		redisClient,
 		httpClient,
+	)
+
+	handler.ForceNextStatus(
+		"6509ae43-40df-4704-a369-c1c8bec2d21f",
+		domain.WebsiteDown,
 	)
 
 	// ------------------ Engine ---------------------

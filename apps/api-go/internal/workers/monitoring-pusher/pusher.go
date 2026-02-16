@@ -15,7 +15,7 @@ import (
 
 const (
 	pushInterval      = 3 * time.Minute
-	heartbeatInterval = 10 * time.Second
+	heartbeatInterval = 30 * time.Second
 	batchSize         = 200
 )
 
@@ -104,6 +104,11 @@ func (w *MonitoringPusher) pushOnce(ctx context.Context) error {
 func (w *MonitoringPusher) Start(ctx context.Context) error {
 	log.Println("Monitoring Pusher started")
 
+	// First push immediately
+	if err := w.pushOnce(ctx); err != nil {
+		log.Println("Initial push failed", err)
+	}
+
 	// how often to push websites
 	pushTicker := time.NewTicker(pushInterval)
 
@@ -121,13 +126,14 @@ func (w *MonitoringPusher) Start(ctx context.Context) error {
 		// If ctx cancelled
 		case <-ctx.Done():
 			w.logStatus("STOPPED", "")
+			return ctx.Err()
 
 		case <-heartbeatTicker.C:
 			w.logStatus("ALIVE", "")
 
 		case <-pushTicker.C:
 			if err := w.pushOnce(ctx); err != nil {
-				log.Println("Pusher failed", err)
+				log.Println("Periodic push failed", err)
 			}
 		}
 	}

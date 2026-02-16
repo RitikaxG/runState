@@ -142,6 +142,10 @@ func (r *Redis) XReadGroup(
 		var messages []domain.StreamMessage
 
 		// Loop over messages inside stream
+
+		/* You need to unmarshal all fields from msg.Values, including the optional
+		ones, and handle the pointers correctly.
+		*/
 		for _, msg := range streamRes.Messages {
 			/*
 				Each msg is
@@ -172,6 +176,23 @@ func (r *Redis) XReadGroup(
 				payload.URL = &v
 			}
 
+			// PrevStatus (optional, pointer)
+			if v, ok := msg.Values["prev_status"].(string); ok {
+				status := domain.WebsiteStatus(v)
+				payload.PrevStatus = &status
+			}
+
+			// CurrentStatus (optional, pointer)
+			if v, ok := msg.Values["current_status"].(string); ok {
+				status := domain.WebsiteStatus(v)
+				payload.CurrentStatus = &status
+			}
+
+			// OccurredAt (optional, pointer)
+			if v, ok := msg.Values["occurred_at"].(string); ok {
+				payload.OccurredAt = &v
+			}
+
 			// Converts Redis Message into Domain Type
 			messages = append(messages, domain.StreamMessage{
 				ID:      msg.ID,
@@ -195,9 +216,13 @@ func (r *Redis) XAck(
 	messageIDs []string,
 	retries int,
 ) error {
-
+	if len(messageIDs) == 0 {
+		return nil
+	}
 	var err error
-	for i := 0; i < retries; i++ {
+
+	attempts := retries + 1 // always try once
+	for i := 0; i < attempts; i++ {
 		err = r.Client.XAck(ctx, stream, consumerGroup, messageIDs...).Err()
 		if err == nil {
 			return nil

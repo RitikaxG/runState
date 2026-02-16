@@ -14,8 +14,8 @@ func (r *Redis) XAddNotificationStream(
 ) error {
 	values := map[string]interface{}{
 		"website_id":     msg.WebsiteID,
-		"prev_status":    msg.PrevStatus,
-		"current_status": msg.CurrentStatus,
+		"prev_status":    string(msg.PrevStatus),
+		"current_status": string(msg.CurrentStatus),
 		"occurred_at":    msg.OccurredAt,
 	}
 

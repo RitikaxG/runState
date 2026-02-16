@@ -24,8 +24,8 @@ func (r *Redis) PushToDLQ(
 		Values: map[string]interface{}{
 			"message_id":     msg.MessageID,
 			"website_id":     msg.WebsiteID,
-			"prev_status":    msg.PrevStatus,
-			"current_status": msg.CurrentStatus,
+			"prev_status":    string(msg.PrevStatus),
+			"current_status": string(msg.CurrentStatus),
 			"occurred_at":    msg.OccurredAt.Format(time.RFC3339),
 			"retries":        msg.Retries,
 			"reason":         msg.Reason,

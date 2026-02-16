@@ -193,6 +193,7 @@ func (e *Engine) Run() error {
 			}
 
 			if len(responses) == 0 {
+				time.Sleep(50 * time.Millisecond)
 				continue
 			}
 
@@ -253,8 +254,8 @@ func safeHandle(
 func (e *Engine) processBatch(messages []domain.StreamMessage) {
 
 	var (
-		ackIds []string   // Collects msg IDs that should be acknowledged. ( Shared across goroutines, must be protected )
-		mu     sync.Mutex // Guards concurrent writes to ackIds
+		ackIds = make([]string, 0, len(messages)) // Collects msg IDs that should be acknowledged. ( Shared across goroutines, must be protected )
+		mu     sync.Mutex                         // Guards concurrent writes to ackIds
 		wg     sync.WaitGroup
 	)
 
@@ -279,31 +280,36 @@ func (e *Engine) processBatch(messages []domain.StreamMessage) {
 			defer wg.Done()
 
 			err := safeHandle(e.Handler, e.ctx, msg)
-
-			// Retry / DLQ decisions belong to handlers, not the engine.
-			if err == nil {
-				mu.Lock()
-				ackIds = append(ackIds, msg.ID)
-				mu.Unlock()
+			if err != nil {
+				log.Println("Handler error for msg", msg.ID, ":", err)
+				return
 			}
+
+			// success → mark for ACK
+			mu.Lock()
+			ackIds = append(ackIds, msg.ID)
+			mu.Unlock()
 		}()
 	}
 
 	wg.Wait()
-
-	// Wait until this batch drains
-	for e.InFlight() > 0 {
-		time.Sleep(10 * time.Millisecond)
+	if len(ackIds) == 0 {
+		return
 	}
 
-	if len(ackIds) > 0 {
-		_ = e.Redis.XAck(
-			e.ctx,
-			e.Stream,
-			e.Group,
-			ackIds,
-			0, // engine does not track retries
-		)
+	ackCtx, cancel := context.WithTimeout(e.ctx, 5*time.Second)
+	defer cancel()
+
+	if err := e.Redis.XAck(
+		ackCtx,
+		e.Stream,
+		e.Group,
+		ackIds,
+		0,
+	); err != nil {
+		log.Println("ACK failed:", err, "ids:", ackIds)
+	} else {
+		log.Println("Batch ACK successful:", len(ackIds), "messages")
 	}
 
 }
@@ -322,7 +328,7 @@ func (e *Engine) Stop(timeout time.Duration) {
 
 	for e.InFlight() > 0 {
 		if time.Since(start) > timeout {
-			log.Println("Forcing shuttdown with inflight", e.InFlight())
+			log.Println("Forcing shutdown with inflight", e.InFlight())
 			return
 		}
 		time.Sleep(500 * time.Millisecond)
