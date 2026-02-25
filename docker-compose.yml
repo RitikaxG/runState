@@ -15,6 +15,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 30
+      start_period: 20s
       
   redis:
     image: redis:7
@@ -28,7 +29,21 @@ services:
       interval: 5s
       timeout: 3s
       retries: 30
-      
+
+  migrate:
+    image: migrate/migrate:v4.17.1
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./apps/api-go/migrations:/migrations
+    command: [
+      "-path", "/migrations",
+      "-database", "postgres://postgres:postgres@postgres:5432/postgres_go?sslmode=disable",
+      "up"
+      ]
+    restart: on-failure
+
   api:
     build:
       context: .
@@ -36,7 +51,7 @@ services:
     image: runstate-api-go:local
     command: ["/server"]
     ports:
-      - "8080:8080"
+      - "3001:3001"
     environment:
       - DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres_go?sslmode=disable
       - REDIS_ADDR=redis:6379
@@ -44,27 +59,27 @@ services:
       - ADMIN_EMAIL=${ADMIN_EMAIL}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
 
   monitoring-pusher:
     image: runstate-api-go:local
-    command: ["/monitoring-pusher"]
+    entrypoint: ["/monitoring-pusher"]
     environment:
       - DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres_go?sslmode=disable
       - REDIS_ADDR=redis:6379
       - MONITORING_STREAM=betteruptime:websites-ticks
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
 
   worker-monitoring:
     image: runstate-api-go:local
-    command: ["/worker-monitoring"]
+    entrypoint: ["/worker-monitoring"]
     environment:
       - DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres_go?sslmode=disable
       - REDIS_ADDR=redis:6379
@@ -74,14 +89,14 @@ services:
       - MONITORING_CONSUMER=monitoring-consumer
       - STATUS_CHANGE_STREAM=betteruptime:website-status-change
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
 
   worker-status-change:
     image: runstate-api-go:local
-    command: ["/worker-status-change"]
+    entrypoint: ["/worker-status-change"]
     environment:
       - DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres_go?sslmode=disable
       - REDIS_ADDR=redis:6379
@@ -90,14 +105,14 @@ services:
       - STATUS_CHANGE_CONSUMER=status-change-consumer
       - NOTIFICATION_STREAM=betteruptime:website-status-notification
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
   
   worker-notification:
     image: runstate-api-go:local
-    command: ["/worker-notification"]
+    entrypoint: ["/worker-notification"]
     environment:
       - DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres_go?sslmode=disable
       - REDIS_ADDR=redis:6379
@@ -109,12 +124,15 @@ services:
       - NOTIFICATION_GROUP=notification-group
       - NOTIFICATION_CONSUMER=notification-consumer
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
 
 volumes:
   pgdata:
   redisdata:
+
+env_file:
+  - .env
 

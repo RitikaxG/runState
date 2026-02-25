@@ -2,16 +2,15 @@ package monitoringworker
 
 import (
 	"context"
+	"database/sql"
 	"log"
 
 	"github.com/RitikaxG/runState/apps/api-go/internal/domain"
 )
 
-func (mw *MonitoringWorker) GetWebsiteStatus(statusCode *int) domain.WebsiteStatus {
-	if statusCode == nil {
-		return domain.WebsiteUnknown
-	}
-	if *statusCode >= 200 && *statusCode < 400 {
+func (mw *MonitoringWorker) GetWebsiteStatus(statusCode int) domain.WebsiteStatus {
+
+	if statusCode >= 200 && statusCode < 400 {
 		return domain.WebsiteUp
 	}
 	return domain.WebsiteDown
@@ -36,9 +35,18 @@ func (mw *MonitoringWorker) GetPreviousStatus(
 	// 3. Redis miss -> Fallback to db
 	website, err := mw.websiteRepo.GetByID(ctx, websiteId)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil // website gone; ignore
+		}
 		return nil, err
 	}
-	log.Println("Previous Status", *website.CurrentStatus)
+
+	if website.CurrentStatus == nil {
+		log.Println("Previous Status: <nil>")
+	} else {
+		log.Println("Previous Status:", *website.CurrentStatus)
+	}
+
 	// If DB has status -> warm redis cache
 	if website.CurrentStatus != nil {
 		_ = mw.redis.SetCurrentStatus(ctx, websiteId, *website.CurrentStatus)

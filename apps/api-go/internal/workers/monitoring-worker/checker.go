@@ -2,6 +2,7 @@ package monitoringworker
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"log"
 	"net/http"
@@ -17,7 +18,7 @@ func (mw *MonitoringWorker) CheckAndUpdateStatus(
 ) error {
 	startTime := time.Now()
 
-	var statusCode *int
+	statusCode := 0
 
 	/*
 		- Create an http Request bound to a context.
@@ -33,16 +34,9 @@ func (mw *MonitoringWorker) CheckAndUpdateStatus(
 		- Send request over the network, ait for response or error
 	*/
 	resp, err := mw.httpClient.Do(req)
-	if err != nil {
-		code := 0
-		statusCode = &code
-	} else {
-		// Ensure response body is closed
+	if err == nil && resp != nil {
 		defer resp.Body.Close()
-
-		// Extract HTTP status code
-		code := resp.StatusCode
-		statusCode = &code
+		statusCode = resp.StatusCode
 	}
 	log.Printf("statusCode=%v", statusCode)
 
@@ -69,7 +63,7 @@ func (mw *MonitoringWorker) CheckAndUpdateStatus(
 		- Engine will not ACK the message, for first ever tick of website,
 		since prevStatus is not found in both Redis and DB, its a cache miss and DB miss, which should be treated as "not found" and not an error.
 		*/
-		if errors.Is(err, redis.Nil) {
+		if errors.Is(err, redis.Nil) || errors.Is(err, sql.ErrNoRows) {
 			prevStatus = nil
 		} else {
 			return err
