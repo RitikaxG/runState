@@ -1,6 +1,9 @@
 package main
 
 import (
+	"context"
+	"database/sql"
+	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -10,14 +13,45 @@ import (
 
 	worker "github.com/RitikaxG/runState/apps/api-go/internal/common-worker"
 	"github.com/RitikaxG/runState/apps/api-go/internal/db"
-	"github.com/RitikaxG/runState/apps/api-go/internal/domain"
 	"github.com/RitikaxG/runState/apps/api-go/internal/redis"
 	"github.com/RitikaxG/runState/apps/api-go/internal/repository"
 	monitoringworker "github.com/RitikaxG/runState/apps/api-go/internal/workers/monitoring-worker"
 	"github.com/joho/godotenv"
 )
 
+func resolveRegionIDWithRetry(
+	ctx context.Context,
+	regionRepo repository.RegionRepository,
+	regionName string,
+) (string, error) {
+	if regionName == "" {
+		return "", errors.New("MONITORING_REGION_NAME is required")
+	}
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		id, err := regionRepo.GetRegionIDByName(ctx, regionName)
+		if err == nil {
+			return id, nil
+		}
+
+		// Retry only if not found; otherwise fail fast
+		if err != sql.ErrNoRows {
+			return "", err
+		}
+
+		log.Println("Region not ready yet retrying...")
+		select {
+		case <-ticker.C:
+			continue
+		case <-ctx.Done():
+			return "", ctx.Err()
+		}
+	}
+}
 func main() {
+	ctx := context.Background()
 	_ = godotenv.Load()
 	dbConn := db.NewPostgres(os.Getenv("DATABASE_URL"))
 	defer dbConn.Close()
@@ -37,9 +71,20 @@ func main() {
 	websiteRepo := repository.NewWebsiteRepository(dbConn)
 	websiteTickRepo := repository.NewWebsiteTicksRepository(dbConn)
 
+	regionRepo := repository.NewRegionRepository(dbConn)
+	regionID, err := resolveRegionIDWithRetry(
+		ctx,
+		regionRepo,
+		os.Getenv("MONITORING_REGION_NAME"),
+	)
+
+	if err != nil {
+		log.Fatal("Region ID not found:", err)
+	}
+
 	// ------- Creating monitoring worker -------------
 	handler := monitoringworker.NewMonitoringWorker(
-		os.Getenv("MONITORING_REGION_ID"),
+		regionID,
 		os.Getenv("STATUS_CHANGE_STREAM"),
 		websiteRepo,
 		websiteTickRepo,
@@ -47,10 +92,10 @@ func main() {
 		httpClient,
 	)
 
-	handler.ForceNextStatus(
-		"6509ae43-40df-4704-a369-c1c8bec2d21f",
-		domain.WebsiteDown,
-	)
+	// handler.ForceNextStatus(
+	// 	"6509ae43-40df-4704-a369-c1c8bec2d21f",
+	// 	domain.WebsiteDown,
+	// )
 
 	// ------------------ Engine ---------------------
 	engine := worker.NewEngine(

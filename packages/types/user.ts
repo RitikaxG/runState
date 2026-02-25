@@ -5,7 +5,3 @@ export interface User {
     createdAt : string
 }
 
-export interface AuthTokens {
-    accessToken : string,
-    refreshtoken : string
-}

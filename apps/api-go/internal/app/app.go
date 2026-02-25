@@ -66,9 +66,9 @@ func BuildServer() (*App, error) {
 		if err := seed.SeedAdmin(dbConn); err != nil {
 			log.Fatal("failed to seed admin:", err)
 		}
-		if err := seed.SeedRegion(dbConn); err != nil {
-			log.Fatal("failed to seed region:", err)
-		}
+		// if err := seed.SeedRegion(dbConn); err != nil {
+		// 	log.Fatal("failed to seed region:", err)
+		// }
 	} else {
 		log.Println(">>> Seed skipped")
 	}
