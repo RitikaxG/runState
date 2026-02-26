@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   postgres:
     image: postgres:16
@@ -52,12 +51,11 @@ services:
     command: ["/server"]
     ports:
       - "3001:3001"
+    env_file:
+      - .env.local
     environment:
       - DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres_go?sslmode=disable
       - REDIS_ADDR=redis:6379
-      - APP_ENV=${APP_ENV}
-      - ADMIN_EMAIL=${ADMIN_EMAIL}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -67,72 +65,64 @@ services:
   monitoring-pusher:
     image: runstate-api-go:local
     entrypoint: ["/monitoring-pusher"]
+    env_file:
+      - .env.local
     environment:
       - DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres_go?sslmode=disable
       - REDIS_ADDR=redis:6379
-      - MONITORING_STREAM=betteruptime:websites-ticks
     depends_on:
       migrate:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
+    restart: unless-stopped
 
   worker-monitoring:
     image: runstate-api-go:local
     entrypoint: ["/worker-monitoring"]
+    env_file:
+      - .env.local
     environment:
       - DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres_go?sslmode=disable
       - REDIS_ADDR=redis:6379
-      - MONITORING_STREAM=betteruptime:websites-ticks
-      - MONITORING_REGION_NAME=ap-south-1 
-      - MONITORING_GROUP=monitoring-group 
-      - MONITORING_CONSUMER=monitoring-consumer
-      - STATUS_CHANGE_STREAM=betteruptime:website-status-change
     depends_on:
       migrate:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
+    restart: unless-stopped
 
   worker-status-change:
     image: runstate-api-go:local
     entrypoint: ["/worker-status-change"]
+    env_file:
+      - .env.local
     environment:
       - DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres_go?sslmode=disable
       - REDIS_ADDR=redis:6379
-      - STATUS_CHANGE_STREAM=betteruptime:website-status-change
-      - STATUS_CHANGE_GROUP=status-change-group
-      - STATUS_CHANGE_CONSUMER=status-change-consumer
-      - NOTIFICATION_STREAM=betteruptime:website-status-notification
     depends_on:
       migrate:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
+    restart: unless-stopped
   
   worker-notification:
     image: runstate-api-go:local
     entrypoint: ["/worker-notification"]
+    env_file:
+      - .env.local
     environment:
       - DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres_go?sslmode=disable
       - REDIS_ADDR=redis:6379
-      - ADMIN_EMAIL=${ADMIN_EMAIL}
-      - MAILGUN_DOMAIN=${MAILGUN_DOMAIN}
-      - MAILGUN_API_KEY=${MAILGUN_API_KEY}
-      - MAILGUN_SENDER=${MAILGUN_SENDER}
-      - NOTIFICATION_STREAM=betteruptime:website-status-notification
-      - NOTIFICATION_GROUP=notification-group
-      - NOTIFICATION_CONSUMER=notification-consumer
     depends_on:
       migrate:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   pgdata:
   redisdata:
-
-env_file:
-  - .env
 

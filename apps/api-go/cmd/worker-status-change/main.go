@@ -19,7 +19,7 @@ func main() {
 	dbConn := db.NewPostgres(os.Getenv("DATABASE_URL"))
 	defer dbConn.Close()
 
-	redisClient, err := redis.NewRedis(os.Getenv("REDIS_ADDR"))
+	redisClient, err := redis.NewRedisFromEnv()
 	if err != nil {
 		log.Fatal(err)
 	}

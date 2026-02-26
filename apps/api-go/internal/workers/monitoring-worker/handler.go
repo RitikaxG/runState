@@ -46,6 +46,7 @@ func NewMonitoringWorker(
 		websiteTickRepo:    websiteTickRepo,
 		redis:              redis,
 		httpClient:         httpClient,
+		
 		forceNextStatus:    make(map[string]domain.WebsiteStatus),
 	}
 }

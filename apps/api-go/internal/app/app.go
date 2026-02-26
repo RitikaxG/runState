@@ -49,7 +49,7 @@ func BuildServer() (*App, error) {
 	dbConn := db.NewPostgres(os.Getenv("DATABASE_URL"))
 	log.Println(os.Getenv("DATABASE_URL"))
 
-	redisClient, err := redis.NewRedis(os.Getenv("REDIS_ADDR"))
+	redisClient, err := redis.NewRedisFromEnv()
 	if err != nil {
 		cancel()
 		return nil, err

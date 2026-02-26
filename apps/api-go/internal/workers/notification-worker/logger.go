@@ -10,6 +10,7 @@ import (
 /*
 Structured Logger layer for notification worker
 */
+
 type NotificationStatus string
 
 const (

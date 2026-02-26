@@ -19,7 +19,7 @@ func main() {
 	/* Reconnects to the Same Redis Server with all its existing data intact
 	- This creates a new client connection to an already existing Redis Server
 	*/
-	redisClient, err := redis.NewRedis(os.Getenv("REDIS_ADDR"))
+	redisClient, err := redis.NewRedisFromEnv()
 	if err != nil {
 		log.Fatal(err)
 	}
