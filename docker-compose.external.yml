@@ -1,0 +1,68 @@
+services:
+  migrate:
+    image: migrate/migrate:v4.17.1
+    env_file:
+      - .env
+    volumes:
+      - ./apps/api-go/migrations:/migrations
+    command: [
+      "-path", "/migrations",
+      "-database", "${DATABASE_URL}",
+      "up"
+      ]
+    restart: on-failure
+    
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api-go/Dockerfile
+    image: runstate-api-go:local
+    ports:
+      - "${PORT:-3001}:3001"
+    env_file:
+      - .env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  monitoring-pusher:
+    image: runstate-api-go:local
+    entrypoint: ["/monitoring-pusher"]
+    env_file:
+      - .env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  worker-monitoring:
+    image: runstate-api-go:local
+    entrypoint: ["/worker-monitoring"]
+    env_file:
+      - .env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  worker-status-change:
+    image: runstate-api-go:local
+    entrypoint: ["/worker-status-change"]
+    env_file:
+      - .env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  worker-notification:
+    image: runstate-api-go:local 
+    entrypoint: ["/worker-notification"]
+    env_file:
+      - .env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
