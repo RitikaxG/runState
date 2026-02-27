@@ -1,4 +1,4 @@
-name: Build & Push ( api-go )
+name: Build & Push ( api-go ) Docker Image
 on:
   push:
     branches: [main]
