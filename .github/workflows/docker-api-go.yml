@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  content: read
+  contents: read
   packages: write
 
 jobs:
