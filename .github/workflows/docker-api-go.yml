@@ -2,6 +2,11 @@ name: Build & Push ( api-go )
 on:
   push:
     branches: [main]
+    # Only run when Go backend changes
+    paths:
+      - "apps/api-go/**"
+      - ".github/workflows/deploy-api-go.yml"
+
   workflow_dispatch: # Allow me to manually run this workflow from Github UI
 
 # This controls what the GITHUB_TOKEN is allowed to do inside the workflow.
