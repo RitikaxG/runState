@@ -2,11 +2,12 @@ name: Build & Push ( api-go )
 on:
   push:
     branches: [main]
-  workflow_dispatch:
+  workflow_dispatch: # Allow me to manually run this workflow from Github UI
 
+# This controls what the GITHUB_TOKEN is allowed to do inside the workflow.
 permissions:
   contents: read
-  packages: write
+  packages: write # Allows to push images to GHCR & publish packages
 
 jobs:
   build-push:
@@ -32,14 +33,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # This action automatically generates image tags, labels, version metadata
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
         with:
+          # ghcr.io/RitikaxG/runstate-api-go ( Base Image )
           images: ghcr.io/${{ github.repository_owner }}/runstate-api-go
           tags: |
-            type=raw,value=latest
+            type=raw,value=latest 
             type=sha
+          # type=sha: this creates a tag based on the commit hash.
 
       - name: Build and Push
         uses: docker/build-push-action@v6
@@ -49,8 +53,11 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+
+          # Performance Optimisation
+          # gha = GitHub Actions cache storage, 
+          cache-from: type=gha  # Before building, try to restore cached layers from GitHub Actions.
+          cache-to: type=gha,mode=max # After building, save all build layers to GitHub cache.
 
 
 
