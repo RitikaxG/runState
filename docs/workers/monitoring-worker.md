@@ -1,6 +1,6 @@
 # Monitoring Worker
 
-This document describes how the Monitoring Worker processes website monitoring tasks using Redis Streams, performs concurrent health checks, persists monitoring data, and emits status-change events.
+This document describes how the Monitoring Worker processes website monitoring tasks using Redis Streams, performs concurrent health checks, persists monitoring data, and emits status-change events..
 
 ---
 

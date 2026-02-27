@@ -1,0 +1,5 @@
+#!/bin/sh
+echo "Running gofmt..."
+cd apps/api-go || exit 1
+gofmt -w .
+git add .
