@@ -1,6 +1,6 @@
 # Pusher Node (Monitoring Stream Producer)
 
-The pusher service is responsible for periodically enqueueing website monitoring jobs into Redis so that monitoring workers can process them in parallel.
+The pusher service is responsible for periodically enqueueing website monitoring jobs into Redis so that monitoring workers can process them in parallel..
 
 ---
 
