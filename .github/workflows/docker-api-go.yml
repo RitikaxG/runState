@@ -9,8 +9,8 @@ permissions:
   packages: write
 
 jobs:
-  build_push:
-    runs_on: ubuntu-latest
+  build-push:
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
