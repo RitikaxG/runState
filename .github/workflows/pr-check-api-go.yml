@@ -1,9 +1,9 @@
 name: PR Check ( api-go ) / Before Merging
 on:
   pull_request:
-    paths:
-      - "apps/api-go/**"
-      - ".github/workflows/pr-check-api-go.yml"
+    # paths:
+    #   - "apps/api-go/**"
+    #   - ".github/workflows/pr-check-api-go.yml"
 
 concurrency:
   group: pr-check-api-go-${{ github.event.pull_request.number }}
