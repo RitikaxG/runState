@@ -2,7 +2,7 @@
 
 ## Overview
 
-The status change worker consumes website status transition events and forwards them to the notification pipeline.
+The status change worker consumes website status transition events and forwards them to the notification pipeline..
 
 This worker is triggered only when a website’s status changes, which is a relatively infrequent event.
 
