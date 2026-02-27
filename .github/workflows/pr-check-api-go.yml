@@ -1,0 +1,28 @@
+name: PR Check (api-go)
+on:
+  pull_request:
+
+jobs:
+  go-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run: 
+        working-directory: apps/api-go
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+          cache-dependency-path: apps/api-go/go.sum
+
+      - name: gofmt check
+        run: |
+          files="$(gofmt -l .)"
+          if [ -n "$files" ]; then
+            echo "These files are not gofmt'd:"
+            echo "$files"
+            exit 1
+          fi
