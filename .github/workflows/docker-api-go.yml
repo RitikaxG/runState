@@ -1,8 +1,8 @@
-name: Build & Push (api-go)
+name: Build & Push ( api-go )
 on:
   push:
     branches: [main]
-    # Only run when Go backend changes
+    # Only run when go backend changes
     paths:
       - "apps/api-go/**"
       - ".github/workflows/deploy-api-go.yml"
