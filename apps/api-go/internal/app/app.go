@@ -12,6 +12,7 @@ import (
 	"github.com/RitikaxG/runState/apps/api-go/internal/db/seed"
 	"github.com/RitikaxG/runState/apps/api-go/internal/handlers"
 	"github.com/RitikaxG/runState/apps/api-go/internal/http/middleware"
+	"github.com/RitikaxG/runState/apps/api-go/internal/metrics"
 	"github.com/RitikaxG/runState/apps/api-go/internal/redis"
 	"github.com/RitikaxG/runState/apps/api-go/internal/repository"
 	"github.com/RitikaxG/runState/apps/api-go/internal/routes"
@@ -21,6 +22,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"github.com/jmoiron/sqlx"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type App struct {
@@ -45,6 +47,11 @@ func BuildServer() (*App, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	r := gin.Default()
+
+	metrics.Init()
+	r.Use(middleware.PrometheusMiddleware())
+	// Prometheus should scrape metrics directly from root
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	dbConn := db.NewPostgres(os.Getenv("DATABASE_URL"))
 	log.Println(os.Getenv("DATABASE_URL"))
