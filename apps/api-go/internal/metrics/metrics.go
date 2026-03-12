@@ -14,7 +14,7 @@ var (
 	HTTPRequestTotal       *prometheus.CounterVec
 	HTTPRequestErrorsTotal *prometheus.CounterVec
 	HTTPRequestDuration    *prometheus.HistogramVec // used to measure request latency distribution
-	HTTPRequestsInFlight   prometheus.Gauge         // tracks number of requests currently processing
+	HTTPRequestsInFlight   prometheus.Gauge         // track number of requests currently processing
 )
 
 func Init() {
