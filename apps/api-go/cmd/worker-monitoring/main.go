@@ -79,7 +79,7 @@ func main() {
 	)
 
 	if err != nil {
-		log.Fatal("Region ID not found:", err)
+		log.Fatal("Region ID not found", err)
 	}
 
 	// ------- Creating monitoring worker -------------
