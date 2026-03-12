@@ -88,5 +88,5 @@ func main() {
 		application.Redis.Close()
 	}
 
-	log.Println("Shutdown complete")
+	log.Println("Shutdown completed")
 }
