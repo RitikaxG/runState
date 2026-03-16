@@ -105,7 +105,11 @@ func BuildServer() (*App, error) {
 	userHandler := handlers.NewUserHandler(userService, authService)
 	authHandler := handlers.NewAuthHandler(authService)
 
-	routes.RegisterRouter(r, websiteHandler, userHandler, authHandler, jwtManager)
+	websiteTicksRepo := repository.NewWebsiteTicksRepository(dbConn)
+	websiteTicksService := service.NewWebsiteTicksService(websiteTicksRepo, websiteRepo)
+	websiteTicksHandler := handlers.NewWebsiteTicksHandler(websiteTicksService)
+
+	routes.RegisterRouter(r, websiteTicksHandler, websiteHandler, userHandler, authHandler, jwtManager)
 
 	/*
 		Custom validators live in a validation package and must be registered once during app startup before routes run.

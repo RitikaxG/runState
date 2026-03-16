@@ -9,4 +9,5 @@ import (
 // APPEND ONLY TABLE
 type WebsiteTicksRepository interface {
 	Create(ctx context.Context, websiteTicks *domain.WebsiteTicks) error
+	ListByWebsiteID(ctx context.Context, websiteID string, limit int) ([]domain.WebsiteTicks, error)
 }

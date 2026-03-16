@@ -40,3 +40,25 @@ func (r *websiteTicksRepository) Create(
 
 	return nil
 }
+
+func (r *websiteTicksRepository) ListByWebsiteID(
+	ctx context.Context,
+	websiteID string,
+	limit int,
+) ([]domain.WebsiteTicks, error) {
+	query := `
+		SELECT id, website_id, region_id, status, response_time_ms, created_at
+		FROM website_ticks
+		WHERE website_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2
+	`
+
+	var ticks []domain.WebsiteTicks
+	err := r.db.SelectContext(ctx, &ticks, query, websiteID, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	return ticks, nil
+}

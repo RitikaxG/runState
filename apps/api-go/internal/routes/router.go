@@ -8,6 +8,7 @@ import (
 
 func RegisterRouter(
 	r *gin.Engine,
+	websiteTicksHandler *handlers.WebsiteTicksHandler,
 	websiteHandler *handlers.WebsiteHandler,
 	userHandler *handlers.UserHandler,
 	authHandler *handlers.AuthHandler,
@@ -20,4 +21,5 @@ func RegisterRouter(
 	RegisterHealthRouter(v1)
 	RegisterAdminRouter(v1, jwtManager, userHandler)
 	RegisterAuthRouter(v1, authHandler)
+	RegisterWebsiteTicksRouter(v1, websiteTicksHandler, jwtManager)
 }
