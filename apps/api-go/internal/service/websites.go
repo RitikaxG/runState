@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/RitikaxG/runState/apps/api-go/internal/domain"
+	"github.com/RitikaxG/runState/apps/api-go/internal/dto"
 	"github.com/RitikaxG/runState/apps/api-go/internal/repository"
 )
 
@@ -18,7 +19,8 @@ It groups:
 This is similar to a "class" in other languages.
 */
 type WebsiteService struct {
-	repo repository.WebsiteRepository
+	repo             repository.WebsiteRepository
+	websiteTicksRepo repository.WebsiteTicksRepository
 }
 
 /*
@@ -136,4 +138,46 @@ func (s *WebsiteService) GetUserEmailByWebsiteID(
 	websiteId string,
 ) (string, error) {
 	return s.repo.GetUserEmailByWebsiteID(ctx, websiteId)
+}
+
+func (s *WebsiteService) GetWebsiteDetail(
+	ctx context.Context,
+	websiteID string,
+	requesterUserID string,
+	role string,
+) (*dto.WebsiteDetailResponse, error) {
+	website, err := s.repo.GetByID(ctx, websiteID)
+	if err != nil {
+		return nil, err
+	}
+
+	if role != "ADMIN" && website.UserID != requesterUserID {
+		return nil, domain.ErrForbidden
+	}
+
+	response := &dto.WebsiteDetailResponse{
+		ID:             website.ID,
+		URL:            website.URL,
+		CurrentStatus:  string(*website.CurrentStatus),
+		TimeAdded:      website.TimeAdded,
+		ActiveIncident: nil,
+	}
+
+	latestTicks, err := s.websiteTicksRepo.GetLatestByWebsiteIDs(ctx, []string{websiteID})
+	if err != nil {
+		return nil, err
+	}
+
+	if tick, ok := latestTicks[websiteID]; ok {
+		response.LastCheckedAt = &tick.CreatedAt
+
+		responseTime := tick.ResponseTimeMs
+		response.LatestResponseTimeMs = &responseTime
+
+		if tick.Status != "" {
+			response.CurrentStatus = string(tick.Status)
+		}
+	}
+
+	return response, nil
 }

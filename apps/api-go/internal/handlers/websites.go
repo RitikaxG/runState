@@ -288,3 +288,79 @@ func (h *WebsiteHandler) DeleteWebsite(c *gin.Context) {
 		Message: "Website Successfully deleted",
 	})
 }
+
+func (h *WebsiteHandler) GetWebsiteByID(c *gin.Context) {
+	websiteID := c.Param("id")
+	if websiteID == "" {
+		c.JSON(http.StatusBadRequest, response.APIResponse{
+			Success: false,
+			Error:   "website id is required",
+		})
+		return
+	}
+
+	userIDValue, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, response.APIResponse{
+			Success: false,
+			Error:   "user_id not found in context",
+		})
+		return
+	}
+
+	userID, ok := userIDValue.(string)
+	if !ok || userID == "" {
+		c.JSON(http.StatusUnauthorized, response.APIResponse{
+			Success: false,
+			Error:   "invalid user_id in context",
+		})
+		return
+	}
+
+	roleValue, exists := c.Get("role")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, response.APIResponse{
+			Success: false,
+			Error:   "role not found in context",
+		})
+		return
+	}
+
+	role, ok := roleValue.(string)
+	if !ok || role == "" {
+		c.JSON(http.StatusUnauthorized, response.APIResponse{
+			Success: false,
+			Error:   "invalid role in context",
+		})
+		return
+	}
+
+	website, err := h.websiteService.GetWebsiteDetail(
+		c.Request.Context(),
+		websiteID,
+		userID,
+		role,
+	)
+	if err != nil {
+		switch err {
+		case domain.ErrForbidden:
+			c.JSON(http.StatusForbidden, response.APIResponse{
+				Success: false,
+				Error:   "you are not allowed to access this website",
+			})
+			return
+		default:
+			c.JSON(http.StatusInternalServerError, response.APIResponse{
+				Success: false,
+				Error:   err.Error(),
+			})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, response.APIResponse{
+		Success: true,
+		Data:    website,
+		Message: "Website fetched successfully",
+	})
+}
