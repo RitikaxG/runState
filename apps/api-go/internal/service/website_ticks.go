@@ -116,7 +116,7 @@ func (s *WebsiteTicksService) ListWebsitesForUser(
 		}
 
 		if tick, ok := latestTicks[website.ID]; ok {
-			item.LastCheckedAt = &tick.CheckedAt
+			item.LastCheckedAt = &tick.CreatedAt
 
 			responseTime := tick.ResponseTimeMs
 			item.LatestResponseTimeMs = &responseTime
