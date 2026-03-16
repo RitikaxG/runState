@@ -17,4 +17,5 @@ func RegisterWebsiteTicksRouter(
 	protected.Use(middleware.RequireRole("ADMIN", "USER"))
 
 	protected.GET(":/id/checks", handler.GetWebsiteChecks)
+	protected.GET("/:id/response-times", handler.GetWebsiteResponseTimes)
 }

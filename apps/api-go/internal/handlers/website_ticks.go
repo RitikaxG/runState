@@ -114,3 +114,82 @@ func (h *WebsiteTicksHandler) GetWebsiteChecks(c *gin.Context) {
 		},
 	})
 }
+
+func (h *WebsiteTicksHandler) GetWebsiteResponseTimes(c *gin.Context) {
+	websiteID := c.Param("id")
+	if websiteID == "" {
+		c.JSON(http.StatusBadRequest, response.APIResponse{
+			Success: false,
+			Error:   "website id is required",
+		})
+		return
+	}
+
+	limitStr := c.DefaultQuery("limit", "50")
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit <= 0 {
+		limit = 50
+	}
+	if limit > 500 {
+		limit = 500
+	}
+
+	userID, err := contextutil.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, response.APIResponse{
+			Success: false,
+			Error:   err.Error(),
+		})
+		return
+	}
+
+	roleValue, exists := c.Get("role")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, response.APIResponse{
+			Success: false,
+			Error:   "role not found in context",
+		})
+		return
+	}
+
+	role, ok := roleValue.(string)
+	if !ok || role == "" {
+		c.JSON(http.StatusUnauthorized, response.APIResponse{
+			Success: false,
+			Error:   "invalid role in context",
+		})
+		return
+	}
+
+	points, err := h.websiteTicksService.GetResponseTimes(
+		c.Request.Context(),
+		userID,
+		role,
+		websiteID,
+		limit,
+	)
+	if err != nil {
+		switch err {
+		case domain.ErrForbidden:
+			c.JSON(http.StatusForbidden, response.APIResponse{
+				Success: false,
+				Error:   "you are not allowed to access this website",
+			})
+			return
+		default:
+			c.JSON(http.StatusInternalServerError, response.APIResponse{
+				Success: false,
+				Error:   err.Error(),
+			})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, response.APIResponse{
+		Success: true,
+		Message: "website response times fetched successfully",
+		Data: dto.WebsiteResponseTimesResponse{
+			Points: points,
+		},
+	})
+}

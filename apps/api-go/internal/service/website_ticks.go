@@ -132,3 +132,44 @@ func (s *WebsiteTicksService) ListWebsitesForUser(
 
 	return items, nil
 }
+
+func (s *WebsiteTicksService) GetResponseTimes(
+	ctx context.Context,
+	userID string,
+	role string,
+	websiteID string,
+	limit int,
+) ([]dto.ResponseTimePoint, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	if limit > 500 {
+		limit = 500
+	}
+
+	website, err := s.websiteRepo.GetByID(ctx, websiteID)
+	if err != nil {
+		return nil, err
+	}
+
+	if role != "ADMIN" && website.UserID != userID {
+		return nil, domain.ErrForbidden
+	}
+
+	ticks, err := s.repo.ListByWebsiteID(ctx, websiteID, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	points := make([]dto.ResponseTimePoint, 0, len(ticks))
+	for _, tick := range ticks {
+		points = append(points, dto.ResponseTimePoint{
+			Timestamp:      tick.CreatedAt,
+			ResponseTimeMs: tick.ResponseTimeMs,
+			Status:         string(tick.Status),
+			RegionID:       tick.RegionID,
+		})
+	}
+
+	return points, nil
+}
