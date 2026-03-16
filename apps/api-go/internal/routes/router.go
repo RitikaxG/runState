@@ -17,7 +17,7 @@ func RegisterRouter(
 
 	// Attach routes to the engine
 	RegisterWebsitesRouter(v1, websiteHandler, jwtManager)
-	RegisterUserRouter(v1, userHandler)
+	RegisterUserRouter(v1, userHandler, jwtManager)
 	RegisterHealthRouter(v1)
 	RegisterAdminRouter(v1, jwtManager, userHandler)
 	RegisterAuthRouter(v1, authHandler)

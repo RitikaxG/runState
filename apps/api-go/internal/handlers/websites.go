@@ -41,7 +41,8 @@ This makes:
 type WebsiteHandler struct {
 	// websiteService is a dependency required by this handler
 	// It is a POINTER so the same service instance is shared
-	websiteService *service.WebsiteService
+	websiteService      *service.WebsiteService
+	websiteTicksService *service.WebsiteTicksService
 }
 
 // 2. Add a Constructor for WebsiteHandler
@@ -75,10 +76,62 @@ func NewWebsiteHandler(ws *service.WebsiteService) *WebsiteHandler {
 	}
 }
 
-// Handler Fn
-func GetWebsites(c *gin.Context) { // gin.Context : single HTTP request + response ( lives only during that request )
-	c.JSON(http.StatusOK, gin.H{
-		"message": "List all websites",
+func (h *WebsiteHandler) ListWebsites(c *gin.Context) {
+	userIDValue, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, response.APIResponse{
+			Success: false,
+			Error:   "user_id not found in context",
+		})
+		return
+	}
+
+	userID, ok := userIDValue.(string)
+	if !ok || userID == "" {
+		c.JSON(http.StatusUnauthorized, response.APIResponse{
+			Success: false,
+			Error:   "invalid user_id in context",
+		})
+		return
+	}
+
+	roleValue, exists := c.Get("role")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, response.APIResponse{
+			Success: false,
+			Error:   "role not found in context",
+		})
+		return
+	}
+
+	role, ok := roleValue.(string)
+	if !ok || role == "" {
+		c.JSON(http.StatusUnauthorized, response.APIResponse{
+			Success: false,
+			Error:   "invalid role in context",
+		})
+		return
+	}
+
+	websites, err := h.websiteTicksService.ListWebsitesForUser(
+		c.Request.Context(),
+		userID,
+		role,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.APIResponse{
+			Success: false,
+			Error:   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, response.APIResponse{
+		Success: true,
+		Data: dto.ListWebsitesResponse{
+			Websites: websites,
+		},
+		Message: "Websites fetched successfully",
 	})
 }
 

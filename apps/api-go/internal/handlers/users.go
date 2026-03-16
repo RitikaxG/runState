@@ -134,3 +134,42 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 	})
 
 }
+
+func (h *UserHandler) GetMe(c *gin.Context) {
+	userIDValue, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, response.APIResponse{
+			Success: false,
+			Error:   "user_id not found in context",
+		})
+		return
+	}
+
+	userID, ok := userIDValue.(string)
+	if !ok || userID == "" {
+		c.JSON(http.StatusUnauthorized, response.APIResponse{
+			Success: false,
+			Error:   "invalid user_id in context",
+		})
+		return
+	}
+
+	me, err := h.userService.GetMe(
+		c.Request.Context(),
+		userID,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.APIResponse{
+			Success: false,
+			Error:   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, response.APIResponse{
+		Success: true,
+		Data:    me,
+		Message: "Current user fetched successfully",
+	})
+}

@@ -20,7 +20,7 @@ func RegisterWebsitesRouter(
 	protected.Use(middleware.AuthMiddleware(jwtManager))
 	protected.Use(middleware.RequireRole("ADMIN", "USER")) // User + Admin Allowed
 
-	protected.GET("/", handlers.GetWebsites)
+	protected.GET("/", handler.ListWebsites)
 	protected.POST("/", handler.CreateWebsite)
 
 	// Only Owner or Admin can delete

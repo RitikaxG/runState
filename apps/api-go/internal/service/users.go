@@ -131,3 +131,19 @@ func (s *UserService) ListUsers(ctx context.Context) ([]dto.SignupResponse, erro
 	}
 	return resp, nil
 }
+
+func (s *UserService) GetMe(
+	ctx context.Context,
+	userID string,
+) (*dto.MeResponse, error) {
+	user, err := s.repo.GetById(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.MeResponse{
+		ID:    user.ID,
+		Email: user.Email,
+		Role:  string(user.Role),
+	}, nil
+}

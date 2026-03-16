@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/RitikaxG/runState/apps/api-go/internal/domain"
+	"github.com/RitikaxG/runState/apps/api-go/internal/dto"
 	"github.com/RitikaxG/runState/apps/api-go/internal/repository"
 )
 
@@ -76,4 +77,57 @@ func (s *WebsiteTicksService) GetWebsiteChecks(
 	}
 
 	return ticks, nil
+}
+
+func (s *WebsiteTicksService) ListWebsitesForUser(
+	ctx context.Context,
+	userID string,
+	role string,
+) ([]dto.WebsiteListItem, error) {
+	websites, err := s.websiteRepo.ListAllWebsites(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	filtered := make([]domain.Website, 0, len(websites))
+	for _, website := range websites {
+		if role == "ADMIN" || website.UserID == userID {
+			filtered = append(filtered, website)
+		}
+	}
+
+	websiteIDs := make([]string, 0, len(filtered))
+	for _, website := range filtered {
+		websiteIDs = append(websiteIDs, website.ID)
+	}
+
+	latestTicks, err := s.repo.GetLatestByWebsiteIDs(ctx, websiteIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]dto.WebsiteListItem, 0, len(filtered))
+	for _, website := range filtered {
+		item := dto.WebsiteListItem{
+			ID:            website.ID,
+			URL:           website.URL,
+			CurrentStatus: string(*website.CurrentStatus),
+			TimeAdded:     website.TimeAdded,
+		}
+
+		if tick, ok := latestTicks[website.ID]; ok {
+			item.LastCheckedAt = &tick.CheckedAt
+
+			responseTime := tick.ResponseTimeMs
+			item.LatestResponseTimeMs = &responseTime
+
+			if tick.Status != "" {
+				item.CurrentStatus = string(tick.Status)
+			}
+		}
+
+		items = append(items, item)
+	}
+
+	return items, nil
 }

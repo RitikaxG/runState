@@ -62,3 +62,44 @@ func (r *websiteTicksRepository) ListByWebsiteID(
 
 	return ticks, nil
 }
+
+func (r *websiteTicksRepository) GetLatestByWebsiteIDs(
+	ctx context.Context,
+	websiteIDs []string,
+) (map[string]domain.WebsiteTicks, error) {
+	result := make(map[string]domain.WebsiteTicks)
+
+	if len(websiteIDs) == 0 {
+		return result, nil
+	}
+
+	query, args, err := sqlx.In(`
+		SELECT DISTINCT ON (website_id)
+			id,
+			website_id,
+			status,
+			response_time_ms,
+			created_at,
+			region_id
+		FROM website_ticks
+		WHERE website_id IN (?)
+		ORDER BY website_id, created_at DESC
+	`, websiteIDs)
+
+	if err != nil {
+		return nil, err
+	}
+
+	query = r.db.Rebind(query)
+	var ticks []domain.WebsiteTicks
+
+	if err := r.db.SelectContext(ctx, &ticks, query, args...); err != nil {
+		return nil, err
+	}
+
+	for _, tick := range ticks {
+		result[tick.WebsiteID] = tick
+	}
+
+	return result, nil
+}
