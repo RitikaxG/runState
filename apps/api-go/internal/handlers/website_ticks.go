@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/RitikaxG/runState/apps/api-go/internal/domain"
 	"github.com/RitikaxG/runState/apps/api-go/internal/dto"
 	contextutil "github.com/RitikaxG/runState/apps/api-go/internal/http/context"
 	"github.com/RitikaxG/runState/apps/api-go/internal/http/response"
@@ -38,6 +39,9 @@ func (h *WebsiteTicksHandler) GetWebsiteChecks(c *gin.Context) {
 	if err != nil || limit <= 0 {
 		limit = 20
 	}
+	if limit > 100 {
+		limit = 100
+	}
 
 	userID, err := contextutil.GetUserID(c)
 	if err != nil {
@@ -48,36 +52,65 @@ func (h *WebsiteTicksHandler) GetWebsiteChecks(c *gin.Context) {
 		return
 	}
 
-	checks, err := h.websiteTicksService.GetWebsiteChecks(
-		c.Request.Context(),
-		userID,
-		websiteID,
-		limit,
-	)
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, response.APIResponse{
+	roleValue, exists := c.Get("role")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, response.APIResponse{
 			Success: false,
-			Error:   err.Error(),
+			Error:   "role not found in context",
 		})
 		return
 	}
 
-	responses := make([]dto.WebsiteTicksResponse, 0, len(checks))
+	role, ok := roleValue.(string)
+	if !ok || role == "" {
+		c.JSON(http.StatusUnauthorized, response.APIResponse{
+			Success: false,
+			Error:   "invalid role in context",
+		})
+		return
+	}
 
+	checks, err := h.websiteTicksService.GetWebsiteChecks(
+		c.Request.Context(),
+		userID,
+		role,
+		websiteID,
+		limit,
+	)
+	if err != nil {
+		switch err {
+		case domain.ErrForbidden:
+			c.JSON(http.StatusForbidden, response.APIResponse{
+				Success: false,
+				Error:   "you are not allowed to access this website",
+			})
+			return
+		default:
+			c.JSON(http.StatusInternalServerError, response.APIResponse{
+				Success: false,
+				Error:   err.Error(),
+			})
+			return
+		}
+	}
+
+	items := make([]dto.WebsiteCheckItem, 0, len(checks))
 	for _, tick := range checks {
-		responses = append(responses, dto.WebsiteTicksResponse{
+		items = append(items, dto.WebsiteCheckItem{
 			ID:             tick.ID,
 			WebsiteID:      tick.WebsiteID,
 			RegionID:       tick.RegionID,
 			Status:         string(tick.Status),
 			ResponseTimeMs: tick.ResponseTimeMs,
-			CheckedAt:      tick.CreatedAt,
+			CreatedAt:      tick.CreatedAt,
 		})
 	}
+
 	c.JSON(http.StatusOK, response.APIResponse{
 		Success: true,
 		Message: "website checks fetched successfully",
-		Data:    responses,
+		Data: dto.ListWebsiteChecksResponse{
+			Checks: items,
+		},
 	})
 }

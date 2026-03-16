@@ -52,25 +52,26 @@ func (s *WebsiteTicksService) CreateWebsiteTicks(
 func (s *WebsiteTicksService) GetWebsiteChecks(
 	ctx context.Context,
 	userID string,
+	role string,
 	websiteID string,
 	limit int,
 ) ([]domain.WebsiteTicks, error) {
 	if limit <= 0 {
 		limit = 20
 	}
+	if limit > 100 {
+		limit = 100
+	}
 
-	// 1. Get website
 	website, err := s.websiteRepo.GetByID(ctx, websiteID)
 	if err != nil {
 		return nil, err
 	}
 
-	// 2. Check user ownership
-	if website.UserID != userID {
+	if role != "ADMIN" && website.UserID != userID {
 		return nil, domain.ErrForbidden
 	}
 
-	// 3. Fetch Ticks
 	ticks, err := s.repo.ListByWebsiteID(ctx, websiteID, limit)
 	if err != nil {
 		return nil, err
