@@ -109,10 +109,15 @@ func (s *WebsiteTicksService) ListWebsitesForUser(
 
 	items := make([]dto.WebsiteListItem, 0, len(filtered))
 	for _, website := range filtered {
+		currentStatus := "unknown"
+		if website.CurrentStatus != nil {
+			currentStatus = string(*website.CurrentStatus)
+		}
+
 		item := dto.WebsiteListItem{
 			ID:            website.ID,
 			URL:           website.URL,
-			CurrentStatus: string(*website.CurrentStatus),
+			CurrentStatus: &currentStatus,
 			TimeAdded:     website.TimeAdded,
 		}
 
@@ -123,7 +128,7 @@ func (s *WebsiteTicksService) ListWebsitesForUser(
 			item.LatestResponseTimeMs = &responseTime
 
 			if tick.Status != "" {
-				item.CurrentStatus = string(tick.Status)
+				item.CurrentStatus = (*string)(&tick.Status)
 			}
 		}
 
@@ -132,7 +137,6 @@ func (s *WebsiteTicksService) ListWebsitesForUser(
 
 	return items, nil
 }
-
 func (s *WebsiteTicksService) GetResponseTimes(
 	ctx context.Context,
 	userID string,
