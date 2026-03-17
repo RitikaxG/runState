@@ -70,9 +70,13 @@ Why do we need this?
   - inject dependencies
 */
 
-func NewWebsiteHandler(ws *service.WebsiteService) *WebsiteHandler {
+func NewWebsiteHandler(
+	ws *service.WebsiteService,
+	wts *service.WebsiteTicksService,
+) *WebsiteHandler {
 	return &WebsiteHandler{
-		websiteService: ws,
+		websiteService:      ws,
+		websiteTicksService: wts,
 	}
 }
 

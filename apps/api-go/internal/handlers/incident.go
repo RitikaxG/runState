@@ -23,7 +23,7 @@ func NewIncidentHandler(incidentService *service.IncidentService) *IncidentHandl
 func (h *IncidentHandler) GetWebsiteIncidents(c *gin.Context) {
 	websiteID := c.Param("id")
 
-	userIDValue, exists := c.Get("userID")
+	userIDValue, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return

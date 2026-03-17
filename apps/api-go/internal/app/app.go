@@ -94,7 +94,6 @@ func BuildServer() (*App, error) {
 
 	websiteRepo := repository.NewWebsiteRepository(dbConn)
 	websiteService := service.NewWebsiteService(websiteRepo)
-	websiteHandler := handlers.NewWebsiteHandler(websiteService)
 
 	userRepo := repository.NewUserRepository(dbConn)
 	refreshRepo := repository.NewRefreshTokenRepository(dbConn)
@@ -108,6 +107,8 @@ func BuildServer() (*App, error) {
 	websiteTicksRepo := repository.NewWebsiteTicksRepository(dbConn)
 	websiteTicksService := service.NewWebsiteTicksService(websiteTicksRepo, websiteRepo)
 	websiteTicksHandler := handlers.NewWebsiteTicksHandler(websiteTicksService)
+
+	websiteHandler := handlers.NewWebsiteHandler(websiteService, websiteTicksService)
 
 	incidentRepo := repository.NewIncidentRepository(dbConn)
 	incidentService := service.NewIncidentService(incidentRepo, websiteRepo)
