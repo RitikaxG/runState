@@ -52,20 +52,11 @@ func (h *WebsiteTicksHandler) GetWebsiteChecks(c *gin.Context) {
 		return
 	}
 
-	roleValue, exists := c.Get("role")
-	if !exists {
+	role, err := contextutil.GetUserRole(c)
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, response.APIResponse{
 			Success: false,
-			Error:   "role not found in context",
-		})
-		return
-	}
-
-	role, ok := roleValue.(string)
-	if !ok || role == "" {
-		c.JSON(http.StatusUnauthorized, response.APIResponse{
-			Success: false,
-			Error:   "invalid role in context",
+			Error:   err.Error(),
 		})
 		return
 	}
@@ -73,7 +64,7 @@ func (h *WebsiteTicksHandler) GetWebsiteChecks(c *gin.Context) {
 	checks, err := h.websiteTicksService.GetWebsiteChecks(
 		c.Request.Context(),
 		userID,
-		role,
+		string(role),
 		websiteID,
 		limit,
 	)
@@ -143,20 +134,11 @@ func (h *WebsiteTicksHandler) GetWebsiteResponseTimes(c *gin.Context) {
 		return
 	}
 
-	roleValue, exists := c.Get("role")
-	if !exists {
+	role, err := contextutil.GetUserRole(c)
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, response.APIResponse{
 			Success: false,
-			Error:   "role not found in context",
-		})
-		return
-	}
-
-	role, ok := roleValue.(string)
-	if !ok || role == "" {
-		c.JSON(http.StatusUnauthorized, response.APIResponse{
-			Success: false,
-			Error:   "invalid role in context",
+			Error:   err.Error(),
 		})
 		return
 	}
@@ -164,7 +146,7 @@ func (h *WebsiteTicksHandler) GetWebsiteResponseTimes(c *gin.Context) {
 	points, err := h.websiteTicksService.GetResponseTimes(
 		c.Request.Context(),
 		userID,
-		role,
+		string(role),
 		websiteID,
 		limit,
 	)
