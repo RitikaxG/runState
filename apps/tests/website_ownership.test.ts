@@ -1,7 +1,7 @@
 import axios from "axios";
 import { describe, it, expect } from "bun:test";
 import { BACKEND_NODE_URL } from "./config";
-import { generateUrls } from "./admin_list_delete_users.test";
+import { generateUrls } from "./generate_urls";
 
 
 describe("RBAC - Website Ownership", () =>{

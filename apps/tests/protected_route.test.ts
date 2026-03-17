@@ -1,7 +1,7 @@
 import axios from "axios";
 import { describe, expect, it } from "bun:test";
 import { BACKEND_NODE_URL } from "./config";
-import { generateUrls } from "./admin_list_delete_users.test";
+import { generateUrls } from "./generate_urls";
 
 describe('Protected Route', () => { 
  let accessToken : string;
@@ -32,7 +32,7 @@ describe('Protected Route', () => {
 
  it("succeeds with token", async () => {
     const res = await axios.post(`${BACKEND_NODE_URL}/api/v1/websites`,{
-        url : "https://google.com",
+        url : "https://example4.com",
     },{
         headers : {
             Authorization : `Bearer ${accessToken}`

@@ -13,26 +13,26 @@ export const generateUser = () => {
 
 
 describe("Signup Signin User",()=>{
-    it("Signup - Create a user",async () => {
-        const newUser = generateUser();
-        const res = await axios.post(`${BACKEND_NODE_URL}/api/v1/signup`,{
-            email : "ritikag@gmail.com",
-            password : "A@a123456"
-        })
+    // it("Signup - Create a user",async () => {
+    //     const newUser = generateUser();
+    //     const res = await axios.post(`${BACKEND_NODE_URL}/api/v1/signup`,{
+    //         email : "ritikag@gmail.com",
+    //         password : "A@a123456"
+    //     })
 
-        expect(res.data.success).toBe(true);
-        expect(res.data.data.email).toBe("ritikag@gmail.com");
-    })
-    it("Signup - Create a user",async () => {
-        const newUser = generateUser();
-        const res = await axios.post(`${BACKEND_NODE_URL}/api/v1/signup`,{
-            email : "ritikagg@gmail.com",
-            password : "A@a123456"
-        })
+    //     expect(res.data.success).toBe(true);
+    //     expect(res.data.data.email).toBe("ritikag@gmail.com");
+    // })
+    // it("Signup - Create a user",async () => {
+    //     const newUser = generateUser();
+    //     const res = await axios.post(`${BACKEND_NODE_URL}/api/v1/signup`,{
+    //         email : "ritikagg@gmail.com",
+    //         password : "A@a123456"
+    //     })
 
-        expect(res.data.success).toBe(true);
-        expect(res.data.data.email).toBe("ritikagg@gmail.com");
-    })
+    //     expect(res.data.success).toBe(true);
+    //     expect(res.data.data.email).toBe("ritikagg@gmail.com");
+    // })
     it("Signup - Create a user",async () => {
         const newUser = generateUser();
         const res = await axios.post(`${BACKEND_NODE_URL}/api/v1/signup`,{

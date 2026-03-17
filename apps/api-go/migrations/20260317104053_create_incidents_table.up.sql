@@ -10,7 +10,7 @@ CREATE TABLE incidents (
 
     CONSTRAINT incidents_website_id_fkey
         FOREIGN KEY (website_id)
-        REFERENCES websites(id)
+        REFERENCES website(id)
         ON DELETE CASCADE,
 
     CONSTRAINT incidents_region_id_fkey

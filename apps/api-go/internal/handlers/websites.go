@@ -81,38 +81,20 @@ func NewWebsiteHandler(
 }
 
 func (h *WebsiteHandler) ListWebsites(c *gin.Context) {
-	userIDValue, exists := c.Get("user_id")
-	if !exists {
+	userID, err := contextutil.GetUserID(c)
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, response.APIResponse{
 			Success: false,
-			Error:   "user_id not found in context",
+			Error:   err.Error(),
 		})
 		return
 	}
 
-	userID, ok := userIDValue.(string)
-	if !ok || userID == "" {
+	role, err := contextutil.GetUserRole(c)
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, response.APIResponse{
 			Success: false,
-			Error:   "invalid user_id in context",
-		})
-		return
-	}
-
-	roleValue, exists := c.Get("role")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, response.APIResponse{
-			Success: false,
-			Error:   "role not found in context",
-		})
-		return
-	}
-
-	role, ok := roleValue.(string)
-	if !ok || role == "" {
-		c.JSON(http.StatusUnauthorized, response.APIResponse{
-			Success: false,
-			Error:   "invalid role in context",
+			Error:   err.Error(),
 		})
 		return
 	}
@@ -120,7 +102,7 @@ func (h *WebsiteHandler) ListWebsites(c *gin.Context) {
 	websites, err := h.websiteTicksService.ListWebsitesForUser(
 		c.Request.Context(),
 		userID,
-		role,
+		string(role),
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.APIResponse{
@@ -303,38 +285,20 @@ func (h *WebsiteHandler) GetWebsiteByID(c *gin.Context) {
 		return
 	}
 
-	userIDValue, exists := c.Get("user_id")
-	if !exists {
+	userID, err := contextutil.GetUserID(c)
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, response.APIResponse{
 			Success: false,
-			Error:   "user_id not found in context",
+			Error:   err.Error(),
 		})
 		return
 	}
 
-	userID, ok := userIDValue.(string)
-	if !ok || userID == "" {
+	role, err := contextutil.GetUserRole(c)
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, response.APIResponse{
 			Success: false,
-			Error:   "invalid user_id in context",
-		})
-		return
-	}
-
-	roleValue, exists := c.Get("role")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, response.APIResponse{
-			Success: false,
-			Error:   "role not found in context",
-		})
-		return
-	}
-
-	role, ok := roleValue.(string)
-	if !ok || role == "" {
-		c.JSON(http.StatusUnauthorized, response.APIResponse{
-			Success: false,
-			Error:   "invalid role in context",
+			Error:   err.Error(),
 		})
 		return
 	}
@@ -343,7 +307,7 @@ func (h *WebsiteHandler) GetWebsiteByID(c *gin.Context) {
 		c.Request.Context(),
 		websiteID,
 		userID,
-		role,
+		string(role),
 	)
 	if err != nil {
 		switch err {

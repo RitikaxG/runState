@@ -14,7 +14,7 @@ CREATE TABLE notification_logs (
 
     CONSTRAINT notification_logs_website_id_fkey
         FOREIGN KEY (website_id)
-        REFERENCES websites(id)
+        REFERENCES website(id)
         ON DELETE CASCADE,
 
     CONSTRAINT notification_logs_incident_id_fkey
