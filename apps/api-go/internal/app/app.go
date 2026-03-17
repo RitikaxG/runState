@@ -93,7 +93,9 @@ func BuildServer() (*App, error) {
 	r.Use(middleware.RateLimitMiddleware())
 
 	websiteRepo := repository.NewWebsiteRepository(dbConn)
-	websiteService := service.NewWebsiteService(websiteRepo)
+	websiteTicksRepo := repository.NewWebsiteTicksRepository(dbConn)
+
+	websiteService := service.NewWebsiteService(websiteRepo, websiteTicksRepo)
 
 	userRepo := repository.NewUserRepository(dbConn)
 	refreshRepo := repository.NewRefreshTokenRepository(dbConn)
@@ -104,7 +106,6 @@ func BuildServer() (*App, error) {
 	userHandler := handlers.NewUserHandler(userService, authService)
 	authHandler := handlers.NewAuthHandler(authService)
 
-	websiteTicksRepo := repository.NewWebsiteTicksRepository(dbConn)
 	websiteTicksService := service.NewWebsiteTicksService(websiteTicksRepo, websiteRepo)
 	websiteTicksHandler := handlers.NewWebsiteTicksHandler(websiteTicksService)
 

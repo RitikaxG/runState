@@ -36,8 +36,14 @@ What it does:
 1. Creates a WebsiteService struct
 2. Returns a pointer to it
 */
-func NewWebsiteService(repo repository.WebsiteRepository) *WebsiteService { // Returns a pointer to created instance of WebsiteService object
-	return &WebsiteService{repo: repo} // creates an instance of WebsiteService object
+func NewWebsiteService(
+	repo repository.WebsiteRepository,
+	websiteTicksRepo repository.WebsiteTicksRepository,
+) *WebsiteService { // Returns a pointer to created instance of WebsiteService object
+	return &WebsiteService{
+		repo:             repo,
+		websiteTicksRepo: websiteTicksRepo,
+	} // creates an instance of WebsiteService object
 }
 
 /*
@@ -155,12 +161,21 @@ func (s *WebsiteService) GetWebsiteDetail(
 		return nil, domain.ErrForbidden
 	}
 
+	currentStatus := "unknown"
+	if website.CurrentStatus != nil {
+		currentStatus = string(*website.CurrentStatus)
+	}
+
 	response := &dto.WebsiteDetailResponse{
 		ID:             website.ID,
 		URL:            website.URL,
-		CurrentStatus:  string(*website.CurrentStatus),
+		CurrentStatus:  currentStatus,
 		TimeAdded:      website.TimeAdded,
 		ActiveIncident: nil,
+	}
+
+	if s.websiteTicksRepo == nil {
+		return response, nil
 	}
 
 	latestTicks, err := s.websiteTicksRepo.GetLatestByWebsiteIDs(ctx, []string{websiteID})
