@@ -14,6 +14,7 @@ import (
 func RegisterWebsitesRouter(
 	r *gin.RouterGroup,
 	handler *handlers.WebsiteHandler,
+	incidentHandler *handlers.IncidentHandler,
 	jwtManager *auth.JWTManager,
 ) { // gin.RouterGroup : organises the routes
 	protected := r.Group("/websites")
@@ -26,4 +27,5 @@ func RegisterWebsitesRouter(
 
 	// Only Owner or Admin can delete
 	protected.DELETE("/:id", handler.DeleteWebsite)
+	protected.GET("/:id/incidents", incidentHandler.GetWebsiteIncidents)
 }

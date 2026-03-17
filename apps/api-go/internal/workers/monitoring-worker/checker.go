@@ -17,6 +17,7 @@ func (mw *MonitoringWorker) CheckAndUpdateStatus(
 	input domain.MonitoringMessage,
 ) error {
 	startTime := time.Now()
+	occurredAt := time.Now()
 
 	statusCode := 0
 
@@ -106,6 +107,23 @@ func (mw *MonitoringWorker) CheckAndUpdateStatus(
 		}
 
 		_ = mw.redis.SetCurrentStatus(ctx, input.WebsiteID, status)
+
+		var regionID *string
+		if input.RegionID != "" {
+			regionID = &input.RegionID
+		}
+
+		err = mw.HandleIncidentTransition(
+			ctx,
+			input.WebsiteID,
+			regionID,
+			*prevStatus,
+			status,
+			occurredAt,
+		)
+		if err != nil {
+			return err
+		}
 
 		if err := mw.redis.XAddStatusChangeStream(
 			ctx,

@@ -8,6 +8,7 @@ import (
 	"github.com/RitikaxG/runState/apps/api-go/internal/domain"
 	"github.com/RitikaxG/runState/apps/api-go/internal/redis"
 	"github.com/RitikaxG/runState/apps/api-go/internal/repository"
+	"github.com/RitikaxG/runState/apps/api-go/internal/service"
 )
 
 type MonitoringWorker struct {
@@ -22,6 +23,8 @@ type MonitoringWorker struct {
 	*/
 	websiteRepo     repository.WebsiteRepository
 	websiteTickRepo repository.WebsiteTicksRepository
+
+	incidentService *service.IncidentService
 
 	// Concrete implementation are passed by pointer
 	redis      *redis.Redis
@@ -38,6 +41,7 @@ func NewMonitoringWorker(
 	websiteTickRepo repository.WebsiteTicksRepository,
 	redis *redis.Redis,
 	httpClient *http.Client,
+	incidentService *service.IncidentService,
 ) *MonitoringWorker {
 	return &MonitoringWorker{
 		regionID:           regionID,
@@ -46,6 +50,7 @@ func NewMonitoringWorker(
 		websiteTickRepo:    websiteTickRepo,
 		redis:              redis,
 		httpClient:         httpClient,
+		incidentService:    incidentService,
 
 		forceNextStatus: make(map[string]domain.WebsiteStatus),
 	}
