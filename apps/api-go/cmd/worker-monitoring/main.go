@@ -15,6 +15,7 @@ import (
 	"github.com/RitikaxG/runState/apps/api-go/internal/db"
 	"github.com/RitikaxG/runState/apps/api-go/internal/redis"
 	"github.com/RitikaxG/runState/apps/api-go/internal/repository"
+	"github.com/RitikaxG/runState/apps/api-go/internal/service"
 	monitoringworker "github.com/RitikaxG/runState/apps/api-go/internal/workers/monitoring-worker"
 	"github.com/joho/godotenv"
 )
@@ -71,6 +72,9 @@ func main() {
 	websiteRepo := repository.NewWebsiteRepository(dbConn)
 	websiteTickRepo := repository.NewWebsiteTicksRepository(dbConn)
 
+	incidentRepo := repository.NewIncidentRepository(dbConn)
+	incidentService := service.NewIncidentService(incidentRepo, websiteRepo)
+
 	regionRepo := repository.NewRegionRepository(dbConn)
 	regionID, err := resolveRegionIDWithRetry(
 		ctx,
@@ -90,6 +94,7 @@ func main() {
 		websiteTickRepo,
 		redisClient,
 		httpClient,
+		incidentService,
 	)
 
 	// handler.ForceNextStatus(

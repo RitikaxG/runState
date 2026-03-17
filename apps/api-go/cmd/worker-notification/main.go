@@ -13,6 +13,7 @@ import (
 	"github.com/RitikaxG/runState/apps/api-go/internal/domain"
 	"github.com/RitikaxG/runState/apps/api-go/internal/redis"
 	"github.com/RitikaxG/runState/apps/api-go/internal/repository"
+	"github.com/RitikaxG/runState/apps/api-go/internal/service"
 	notificationworker "github.com/RitikaxG/runState/apps/api-go/internal/workers/notification-worker"
 	"github.com/joho/godotenv"
 )
@@ -31,6 +32,10 @@ func main() {
 	defer redisClient.Close()
 
 	websiteRepo := repository.NewWebsiteRepository(dbConn)
+	incidentRepo := repository.NewIncidentRepository(dbConn)
+
+	notificationLogRepo := repository.NewNotificationLogRepository(dbConn)
+	notificationLogService := service.NewNotificationLogService(notificationLogRepo, websiteRepo)
 
 	// Channel Registry ( Notification Channels )
 	channelRegistry := channels.ChannelRegistry{
@@ -62,6 +67,8 @@ func main() {
 		channelRegistry,
 		rules,
 		websiteRepo,
+		notificationLogService,
+		incidentRepo,
 		os.Getenv("NOTIFICATION_GROUP"),
 		os.Getenv("NOTIFICATION_CONSUMER"),
 	)

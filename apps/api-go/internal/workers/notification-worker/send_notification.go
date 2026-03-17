@@ -2,9 +2,11 @@ package notificationworker
 
 import (
 	"context"
+	"time"
 
 	"github.com/RitikaxG/runState/apps/api-go/internal/channels"
 	"github.com/RitikaxG/runState/apps/api-go/internal/domain"
+	"github.com/RitikaxG/runState/apps/api-go/internal/service"
 )
 
 func (nw *NotificationWorker) SendNotification(
@@ -23,7 +25,7 @@ func (nw *NotificationWorker) SendNotification(
 
 	eventType := *eventTypePtr
 
-	// 2. Idempotency Check
+	// 2. Idempotency check
 	ok, err := nw.redis.MarkAsSentOnce(ctx, msg.WebsiteID, eventType)
 	if err != nil {
 		return err
@@ -43,13 +45,26 @@ func (nw *NotificationWorker) SendNotification(
 		userEmail       string
 	)
 
-	// Apply Rules
+	// Optional: resolve active incident once
+	var incidentID *string
+	if nw.incidentRepo != nil {
+		activeIncident, err := nw.incidentRepo.GetActiveByWebsiteAndRegion(
+			ctx,
+			msg.WebsiteID,
+			msg.RegionID,
+		)
+		if err == nil && activeIncident != nil {
+			incidentID = &activeIncident.ID
+		}
+	}
+
+	// 3. Apply rules
 	for _, rule := range nw.rules {
 		if !ShouldNotify(rule, string(eventType)) {
 			continue
 		}
 
-		// Throttling
+		// 4. Throttling
 		throttled, err := nw.redis.ShouldThrottle(
 			ctx,
 			msg.WebsiteID,
@@ -70,7 +85,7 @@ func (nw *NotificationWorker) SendNotification(
 			continue
 		}
 
-		// Resolve Channel
+		// 5. Resolve channel
 		channelType := domain.NotificationChannelType(rule.Channel)
 		channel, ok := nw.channels[channelType]
 		if !ok {
@@ -83,7 +98,7 @@ func (nw *NotificationWorker) SendNotification(
 			continue
 		}
 
-		// Resolve user email once
+		// 6. Resolve user email once
 		if userEmail == "" {
 			userEmail, err = nw.websiteRepo.GetUserEmailByWebsiteID(
 				ctx,
@@ -94,16 +109,53 @@ func (nw *NotificationWorker) SendNotification(
 			}
 		}
 
-		// Send Notification
-		_, err = channel.Send(ctx, channels.NotificationPayload{
+		// 7. Send notification
+		providerMessageID, sendErr := channel.Send(ctx, channels.NotificationPayload{
 			WebsiteID:  msg.WebsiteID,
 			EventType:  eventType,
 			OccurredAt: msg.OccurredAt,
 			Target:     userEmail,
 		})
 
+		var providerMessageIDPtr *string
+		if providerMessageID != "" {
+			providerMessageIDPtr = &providerMessageID
+		}
+
+		deliveryStatus := "sent"
+		if sendErr != nil {
+			deliveryStatus = "failed"
+		}
+
+		// 8. Persist notification attempt
+		err = nw.notificationLogService.RecordNotificationAttempt(
+			ctx,
+			service.RecordNotificationAttemptInput{
+				WebsiteID:         msg.WebsiteID,
+				IncidentID:        incidentID,
+				RegionID:          msg.RegionID,
+				Channel:           rule.Channel,
+				Recipient:         userEmail,
+				PrevStatus:        msg.PrevStatus,
+				CurrentStatus:     msg.CurrentStatus,
+				DeliveryStatus:    deliveryStatus,
+				ProviderMessageID: providerMessageIDPtr,
+				SentAt:            time.Now().UTC(),
+			},
+		)
 		if err != nil {
 			return err
+		}
+
+		// 9. Handle send result
+		if sendErr != nil {
+			LogNotification(map[string]string{
+				"websiteId": msg.WebsiteID,
+				"eventType": string(eventType),
+				"channel":   rule.Channel,
+				"status":    "failed",
+			})
+			continue
 		}
 
 		sentAtLeastOnce = true
@@ -114,7 +166,6 @@ func (nw *NotificationWorker) SendNotification(
 			"channel":   rule.Channel,
 			"status":    string(NotifSent),
 		})
-
 	}
 
 	if !sentAtLeastOnce {
@@ -124,6 +175,6 @@ func (nw *NotificationWorker) SendNotification(
 			"status":    string(NotifNoOp),
 		})
 	}
-	return nil
 
+	return nil
 }

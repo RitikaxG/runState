@@ -9,6 +9,7 @@ import (
 	"github.com/RitikaxG/runState/apps/api-go/internal/domain"
 	"github.com/RitikaxG/runState/apps/api-go/internal/redis"
 	"github.com/RitikaxG/runState/apps/api-go/internal/repository"
+	"github.com/RitikaxG/runState/apps/api-go/internal/service"
 )
 
 type NotificationWorker struct {
@@ -18,6 +19,9 @@ type NotificationWorker struct {
 	rules        []NotificationRule
 	maxRetries   int
 	websiteRepo  repository.WebsiteRepository
+
+	notificationLogService *service.NotificationLogService
+	incidentRepo           repository.IncidentRepository
 
 	stream      string
 	group       string
@@ -32,17 +36,22 @@ func NewNotificationWorker(
 	rules []NotificationRule,
 	websiteRepo repository.WebsiteRepository,
 
+	notificationLogService *service.NotificationLogService,
+	incidentRepo repository.IncidentRepository,
+
 	group string,
 	consumer string,
 
 ) *NotificationWorker {
 	return &NotificationWorker{
-		redis:        redis,
-		notifyStream: notifyStream,
-		channels:     channels,
-		rules:        rules,
-		maxRetries:   5,
-		websiteRepo:  websiteRepo,
+		redis:                  redis,
+		notifyStream:           notifyStream,
+		channels:               channels,
+		rules:                  rules,
+		maxRetries:             5,
+		websiteRepo:            websiteRepo,
+		notificationLogService: notificationLogService,
+		incidentRepo:           incidentRepo,
 
 		stream:      notifyStream,
 		group:       group,
