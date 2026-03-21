@@ -1,8 +1,8 @@
 # RunState
 
-**A BetterUptime-inspired uptime monitoring platform built with Go, workers, Redis, Postgres, Docker, and Kubernetes GitOps.**
+**A BetterUptime-inspired uptime monitoring platform built, tested, and re-implemented in Go as a production-style backend system.**
 
-RunState is a production-style monitoring system that periodically checks websites, records uptime and response-time history, tracks incidents, and stores notification events. I first built and fully tested the backend in TypeScript, then rewrote it in Go to deepen my understanding of backend engineering through a real, end-to-end system.
+RunState is a monitoring system that periodically checks websites, records uptime and response-time history, tracks incidents, and stores notification events. I first built and fully tested the system in TypeScript, then rewrote the backend in Go to deepen my backend engineering skills by re-implementing a real, end-to-end product.
 
 ![RunState Architecture](./docs/architecture/architecture.md)
 
@@ -12,61 +12,62 @@ RunState is a production-style monitoring system that periodically checks websit
 
 RunState is an uptime monitoring platform inspired by BetterUptime.
 
-It allows users to:
+It supports:
 
-- add and manage websites to monitor,
-- run periodic health checks,
-- store historical check and response-time data,
-- detect incidents when a website goes down,
-- persist notification logs,
-- expose monitoring data through API endpoints,
-- deploy the system using Docker, Kubernetes, and GitOps.
+- website monitoring at regular intervals,
+- historical check and response-time storage,
+- incident tracking when status changes occur,
+- notification event persistence,
+- API access for dashboard and frontend use,
+- containerized local execution,
+- Kubernetes deployment through a separate GitOps repository.
+
+This project is not just an architecture write-up. It is implemented, tested, containerized, and prepared for deployment as a production-style backend system.
 
 ---
 
 ## Core highlights
 
 - **Go backend** with layered architecture
-- **Worker-based system** for monitoring and event processing
-- **Redis-backed event pipeline**
-- **Postgres persistence** for websites, checks, incidents, and logs
+- **Worker-based monitoring pipeline**
+- **Redis-backed event flow**
+- **Postgres persistence**
 - **JWT + refresh-token authentication**
-- **Prometheus metrics** for observability
+- **Prometheus metrics**
 - **Dockerized services**
-- **GitHub Actions CI/CD**
-- **Argo CD GitOps deployment**
-- **External Secrets integration**
-- **Horizontal Pod Autoscaling (HPA)**
+- **GitHub Actions CI**
+- **Frontend-facing monitoring APIs**
+- **Deployed through Kubernetes + GitOps**
 
 ---
 
 ## Architecture
 
-RunState is split into multiple services and workers:
+RunState is split into multiple components:
 
 - **API server**  
-  Handles authentication, website management, and frontend-facing monitoring endpoints.
+  Handles authentication, website management, and frontend-facing APIs.
 
 - **monitoring-pusher**  
   Periodically pushes websites into the monitoring pipeline.
 
 - **worker-monitoring**  
-  Performs website checks and records monitoring results.
+  Executes website checks and stores monitoring results.
 
 - **worker-status-change**  
-  Detects state transitions such as `up -> down` or `down -> up` and creates status-change / incident events.
+  Detects transitions such as `up -> down` and creates incident and status-change events.
 
 - **worker-notification**  
-  Processes notification events and stores or sends notification history.
+  Processes notification events and stores notification history.
 
 - **Redis**  
-  Used as the event backbone between workers.
+  Connects the workers through an event-driven pipeline.
 
 - **Postgres**  
-  Stores users, websites, checks, incidents, response-time history, and notification logs.
+  Stores users, websites, checks, response times, incidents, and notification logs.
 
 - **GitOps repo**  
-  Deployment manifests are managed separately in [`runstate-gitops`](https://github.com/RitikaxG/runstate-gitops).
+  Kubernetes deployment state is managed in [`runstate-gitops`](https://github.com/RitikaxG/runstate-gitops).
 
 ---
 
@@ -75,12 +76,23 @@ RunState is split into multiple services and workers:
 - Authentication with JWT and refresh tokens
 - Add, list, and delete monitored websites
 - Periodic uptime checks
+- Check history and response-time history
 - Incident tracking
-- Response-time history
 - Notification logs
-- Prometheus metrics and health endpoints
-- Dockerized local setup
-- Kubernetes + Argo CD deployment pipeline
+- Health and metrics endpoints
+- Dockerized multi-service execution
+- Kubernetes-ready backend image
+
+---
+
+## Proof of implementation
+
+### Test suite
+
+The repository includes tests under `apps/tests`, and the test suite has been executed successfully.  
+This provides proof that the implemented backend behavior has been validated beyond just code structure.
+
+![Passing test suite](./docs/tests/check_tests.png)
 
 ---
 
@@ -89,21 +101,23 @@ RunState is split into multiple services and workers:
 ```txt
 runState/
 ├── apps/
-│   ├── api-go/        # Main Go backend, workers, migrations
-│   └── web/           # Next.js frontend
+│   ├── api-go/        # Go backend, workers, migrations
+│   ├── tests/         # Executed test suite
+│   └── web/           # Frontend
 ├── docs/
-│   ├── architecture/  # System diagrams
-│   ├── devops/        # DevOps and deployment notes
-│   └── workers/       # Worker architecture documentation
+│   ├── architecture/  # Architecture diagrams
+│   ├── devops/        # Deployment and infra notes
+│   ├── workers/       # Worker flow documentation
+│   └── screenshots/   # Proof-of-implementation screenshots
 ├── packages/          # Shared monorepo packages
-└── .github/workflows/ # CI/CD workflows
+└── .github/workflows/ # CI workflows
 ```
 
 ---
 
 ## Local development
 
-### Start the API server
+### Run the API server
 
 ```bash
 cd apps/api-go
@@ -138,27 +152,11 @@ cd apps/api-go
 go run ./cmd/worker-notification/main.go
 ```
 
-### Run with Docker
+### Run the stack with Docker
 
 ```bash
 docker compose up --build
 ```
-
----
-
-## Screenshots / demo
-
-Frontend screenshots and demo flows will be added here.
-
-Planned showcase screens:
-
-- Login
-- Dashboard
-- Website details
-- Checks history
-- Response-time chart
-- Incidents
-- Notifications
 
 ---
 
@@ -174,22 +172,25 @@ RunState is the project through which I transitioned from writing backend system
 
 Through this project, I:
 
-- rewrote a legacy TypeScript backend into Go,
-- learned Go backend structure and service/repository layering,
+- first built and validated the system in TypeScript,
+- then rewrote the backend in Go,
+- learned Go service and repository layering,
 - implemented worker-based event processing,
-- worked with Redis and Postgres in a production-style architecture,
-- containerized services with Docker,
-- built CI/CD pipelines with GitHub Actions,
-- deployed the system to Kubernetes using GitOps with Argo CD.
+- used Redis and Postgres in a production-style architecture,
+- containerized the system with Docker,
+- added CI workflows,
+- prepared the project for Kubernetes deployment through GitOps.
 
-This project was not just about building a monitoring platform. It was also my way of learning how to design, implement, deploy, and operate backend systems more professionally.
+This project helped me learn backend engineering by building, testing, re-implementing, and operating a real system instead of a toy example.
 
 ---
 
 ## Status
 
 - Backend: **implemented**
-- Workers: **implemented**
-- CI/CD: **implemented**
-- GitOps: **implemented**
+- Worker pipeline: **implemented**
+- Tests: **executed and passing**
+- Docker image: **built**
+- CI: **implemented**
+- GitOps deployment: **implemented in separate repo**
 - Frontend: **in progress**
