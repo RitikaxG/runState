@@ -4,7 +4,7 @@
 
 RunState is a monitoring system that periodically checks websites, records uptime and response-time history, tracks incidents, and stores notification events. I first built and fully tested the system in TypeScript, then rewrote the backend in Go to deepen my backend engineering skills by re-implementing a real, end-to-end product.
 
-![RunState Architecture](./docs/architecture/architecture.md)
+![RunState Architecture](./docs/architecture/alerting_system.png)
 
 ---
 
