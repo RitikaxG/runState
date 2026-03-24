@@ -1,28 +1,90 @@
-## Getting Started
+# RunState Frontend
 
-First, run the development server:
+Modern Next.js frontend for RunState website monitoring platform.
+
+## Setup
 
 ```bash
-yarn dev
+# Install dependencies
+npm install
+
+# Set environment variables
+cp .env.local.example .env.local
+
+# Start development server
+npm run dev
 ```
 
-Open [http://localhost:3001](http://localhost:3001) with your browser to see the result.
+## Build & Deploy
 
-You can start editing the page by modifying `src/app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+npm start
+```
 
-To create [API routes](https://nextjs.org/docs/app/building-your-application/routing/router-handlers) add an `api/` directory to the `app/` directory with a `route.ts` file. For individual endpoints, create a subfolder in the `api` directory, like `api/hello/route.ts` would map to [http://localhost:3001/api/hello](http://localhost:3001/api/hello).
+## Architecture
 
-## Learn More
+### Directory Structure
 
-To learn more about Next.js, take a look at the following resources:
+- **app/** - Next.js pages and layouts (App Router)
+- **components/** - Reusable React components
+- **lib/** - Utilities, API client, helpers
+- **stores/** - Zustand state management
+- **types/** - TypeScript type definitions
+- **hooks/** - Custom React hooks
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn/foundations/about-nextjs) - an interactive Next.js tutorial.
+### State Management
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+Three Zustand stores:
 
-## Deploy on Vercel
+1. **auth-store** - User authentication & tokens
+2. **websites-store** - Website data & monitoring info
+3. **ui-store** - UI state (modals, toasts, sidebar)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_source=github.com&utm_medium=referral&utm_campaign=turborepo-readme) from the creators of Next.js.
+### API Integration
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- Single API client in `lib/api.ts`
+- Typed API responses matching backend DTOs
+- Automatic Bearer token injection
+- Error handling with custom `APIError` class
+
+### Styling
+
+- Tailwind CSS for styling
+- Custom components with variant support
+- Mobile-responsive design
+
+## Key Features
+
+- ✅ User authentication (signin/signup)
+- ✅ Protected dashboard
+- ✅ Website CRUD operations
+- ✅ Real-time status monitoring
+- ✅ Response time tracking
+- ✅ Incident history
+- ✅ Notification logs
+- ✅ Public status page
+- ✅ Toast notifications
+- ✅ Loading/error states
+
+## Development Tips
+
+1. Run both backend and frontend:
+   ```bash
+   # Terminal 1 - Backend
+   cd apps/api-go
+   go run main.go
+
+   # Terminal 2 - Frontend
+   cd apps/web
+   npm run dev
+   ```
+
+2. Frontend runs on `http://localhost:3000`
+3. Backend API on `http://localhost:8080/api/v1`
+
+## Environment Variables
+
+```
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api/v1
+```

@@ -1,100 +1,219 @@
-"use client";
+'use client'
 
-import { create } from "zustand";
-import { apiRequest } from "../lib/api";
-import type { SignInResponse, User } from "../types/auth";
+import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
+import { authAPI, APIError } from '../lib/api'
+import type { User } from '../types/auth'
 
-type AuthState = {
-  token: string | null;
-  user: User | null;
-  isLoading: boolean;
-  error: string | null;
-  isAuthenticated: boolean;
-  isHydrated: boolean;
-  signIn: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
-  hydrateFromStorage: () => void;
-};
+interface AuthStore {
+  user: User | null
+  accessToken: string | null
+  refreshToken: string | null
+  isAuthenticated: boolean
+  isLoading: boolean
+  error: string | null
 
-export const useAuthStore = create<AuthState>((set) => ({
-  token: null,
-  user: null,
-  isLoading: false,
-  error: null,
-  isAuthenticated: false,
-  isHydrated: false,
+  signin: (email: string, password: string) => Promise<void>
+  signup: (email: string, password: string) => Promise<void>
+  logout: () => Promise<void>
+  refreshAccessToken: () => Promise<void>
+  clearError: () => void
+}
 
-  signIn: async (email, password) => {
-    try {
-      set({ isLoading: true, error: null });
+const isProduction = process.env.NODE_ENV === 'production'
 
-      const res = await apiRequest<SignInResponse>("/signin", {
-        method: "POST",
-        body: { email, password },
-      });
+function setTokenCookie(name: string, value: string, expiresAt: Date) {
+  document.cookie = [
+    `${name}=${encodeURIComponent(value)}`,
+    'path=/',
+    `expires=${expiresAt.toUTCString()}`,
+    'SameSite=Lax',
+    ...(isProduction ? ['Secure'] : []),
+  ].join('; ')
+}
 
-      const token = res.data?.accessToken ?? null;
-      const user = res.data?.user ?? null;
+function clearTokenCookie(name: string) {
+  document.cookie = [
+    `${name}=`,
+    'path=/',
+    'expires=Thu, 01 Jan 1970 00:00:00 UTC',
+    'SameSite=Lax',
+    ...(isProduction ? ['Secure'] : []),
+  ].join('; ')
+}
 
-      if (!token || !user) {
-        throw new Error("Invalid signin response");
-      }
+function getErrorMessage(err: unknown, fallback: string) {
+  if (err instanceof APIError) {
+    return err.message
+  }
 
-      localStorage.setItem("runstate_token", token);
-      localStorage.setItem("runstate_user", JSON.stringify(user));
+  if (err instanceof Error) {
+    return err.message
+  }
 
-      set({
-        token,
-        user,
-        isAuthenticated: true,
-        isHydrated: true,
-        isLoading: false,
-        error: null,
-      });
+  return fallback
+}
 
-      return true;
-    } catch (err) {
-      set({
-        error: err instanceof Error ? err.message : "Signin failed",
-        isLoading: false,
-        isHydrated: true,
-      });
-      return false;
-    }
-  },
-
-  logout: () => {
-    localStorage.removeItem("runstate_token");
-    localStorage.removeItem("runstate_user");
-
-    set({
-      token: null,
+export const useAuthStore = create<AuthStore>()(
+  persist(
+    (set, get) => ({
       user: null,
+      accessToken: null,
+      refreshToken: null,
       isAuthenticated: false,
-      isHydrated: true,
+      isLoading: false,
       error: null,
-    });
-  },
 
-  hydrateFromStorage: () => {
-    if (typeof window === "undefined") return;
+      signin: async (email: string, password: string) => {
+        try {
+          set({ isLoading: true, error: null })
 
-    const token = localStorage.getItem("runstate_token");
-    const userRaw = localStorage.getItem("runstate_user");
+          const response = await authAPI.signin(email, password)
+          const authData = response.data
 
-    let user: User | null = null;
+          if (!response.success || !authData) {
+            throw new Error(response.error || 'Signin failed')
+          }
 
-    try {
-      user = userRaw ? JSON.parse(userRaw) : null;
-    } catch {
-      user = null;
+          const userRes = await authAPI.me(authData.access_token)
+          const userData = userRes.data
+
+          if (!userRes.success || !userData) {
+            throw new Error(userRes.error || 'Failed to load user profile')
+          }
+
+          const accessExpiresAt = new Date(Date.now() + 60 * 60 * 1000)
+          const refreshExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+
+          setTokenCookie('access_token', authData.access_token, accessExpiresAt)
+          setTokenCookie('refresh_token', authData.refresh_token, refreshExpiresAt)
+
+          set({
+            user: userData,
+            accessToken: authData.access_token,
+            refreshToken: authData.refresh_token,
+            isAuthenticated: true,
+            isLoading: false,
+            error: null,
+          })
+        } catch (err) {
+          const errorMessage = getErrorMessage(err, 'Signin failed')
+
+          set({
+            user: null,
+            accessToken: null,
+            refreshToken: null,
+            isAuthenticated: false,
+            isLoading: false,
+            error: errorMessage,
+          })
+
+          throw err
+        }
+      },
+
+      signup: async (email: string, password: string) => {
+        try {
+          set({ isLoading: true, error: null })
+
+          const response = await authAPI.signup(email, password)
+
+          if (!response.success) {
+            throw new Error(response.error || 'Signup failed')
+          }
+
+          await get().signin(email, password)
+        } catch (err) {
+          const errorMessage = getErrorMessage(err, 'Signup failed')
+
+          set({
+            isLoading: false,
+            error: errorMessage,
+          })
+
+          throw err
+        }
+      },
+
+      logout: async () => {
+        const refreshToken = get().refreshToken
+
+        try {
+          set({ isLoading: true, error: null })
+
+          if (refreshToken) {
+            await authAPI.logout(refreshToken)
+          }
+        } catch {
+          // Ignore logout API failure and still clear client auth state
+        } finally {
+          clearTokenCookie('access_token')
+          clearTokenCookie('refresh_token')
+
+          set({
+            user: null,
+            accessToken: null,
+            refreshToken: null,
+            isAuthenticated: false,
+            isLoading: false,
+            error: null,
+          })
+        }
+      },
+
+      refreshAccessToken: async () => {
+        try {
+          const refreshToken = get().refreshToken
+
+          if (!refreshToken) {
+            throw new Error('No refresh token available')
+          }
+
+          const response = await authAPI.refreshToken(refreshToken)
+          const data = response.data
+
+          if (!response.success || !data) {
+            throw new Error(response.error || 'Failed to refresh session')
+          }
+
+          const accessExpiresAt = new Date(Date.now() + 60 * 60 * 1000)
+          const refreshExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+
+          setTokenCookie('access_token', data.access_token, accessExpiresAt)
+          setTokenCookie('refresh_token', data.refresh_token, refreshExpiresAt)
+
+          set({
+            accessToken: data.access_token,
+            refreshToken: data.refresh_token,
+            isAuthenticated: true,
+            error: null,
+          })
+        } catch {
+          clearTokenCookie('access_token')
+          clearTokenCookie('refresh_token')
+
+          set({
+            user: null,
+            accessToken: null,
+            refreshToken: null,
+            isAuthenticated: false,
+            isLoading: false,
+            error: 'Session expired. Please sign in again.',
+          })
+        }
+      },
+
+      clearError: () => set({ error: null }),
+    }),
+    {
+      name: 'auth-store',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        user: state.user,
+        accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
-
-    set({
-      token,
-      user,
-      isAuthenticated: !!token,
-      isHydrated: true,
-    });
-  },
-}));
+  )
+)

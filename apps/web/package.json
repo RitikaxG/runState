@@ -1,37 +1,28 @@
 {
-  "name": "web",
-  "version": "1.0.0",
-  "type": "module",
+  "name": "runstate-web",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3001",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint --max-warnings 0",
-    "check-types": "next typegen && tsc --noEmit"
+    "lint": "next lint"
   },
   "dependencies": {
-    "@repo/ui": "*",
-    "axios": "^1.13.6",
-    "lucide-react": "^0.577.0",
-    "next": "16.0.10",
-    "react": "^19.2.0",
-    "react-dom": "^19.1.0",
-    "zustand": "^5.0.12"
+    "clsx": "^2.0.0",
+    "next": "14.2.30",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "recharts": "2.12.7",
+    "zustand": "^4.4.0"
   },
   "devDependencies": {
-    "@next/eslint-plugin-next": "^15.4.6",
-    "@repo/eslint-config": "*",
-    "@repo/tailwind-config": "*",
-    "@repo/typescript-config": "*",
-    "@tailwindcss/postcss": "^4.1.5",
-    "@types/node": "^22.15.30",
-    "@types/react": "^19.1.0",
-    "@types/react-dom": "^19.1.1",
-    "autoprefixer": "^10.4.20",
-    "eslint": "^9.39.1",
-    "postcss": "^8.5.3",
-    "tailwindcss": "^4.1.5",
-    "typescript": "5.9.2"
+    "@types/node": "^20.0.0",
+    "@types/react": "18.2.66",
+    "@types/react-dom": "18.2.22",
+    "typescript": "5.4.5",
+    "tailwindcss": "^3.3.0",
+    "postcss": "^8.4.0",
+    "autoprefixer": "^10.4.0"
   }
 }

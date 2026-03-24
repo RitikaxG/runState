@@ -1,6 +1,12 @@
 {
   "extends": "@repo/typescript-config/nextjs.json",
   "compilerOptions": {
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "jsx": "preserve",
+     "paths": {
+      "react": [ "./node_modules/@types/react" ]
+    },
     "plugins": [
       {
         "name": "next"
