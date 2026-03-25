@@ -34,6 +34,7 @@ export const API_LIMITS = {
 export const ROUTES = {
   HOME: '/',
   SIGNIN: '/signin',
+  SIGNUP: '/signup',
   DASHBOARD: '/dashboard',
   WEBSITE_DETAIL: (id: string) => `/dashboard/websites/${id}`,
   STATUS_PAGE: (slug: string) => `/status/${slug}`,

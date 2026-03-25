@@ -20,7 +20,7 @@ export default function Home() {
           </Link>
 
           <Link
-            href={ROUTES.SIGNIN}
+            href={ROUTES.SIGNUP}
             className="inline-block rounded-lg border border-blue-600 bg-white px-8 py-3 font-semibold text-blue-600 transition hover:bg-blue-50"
           >
             Sign Up

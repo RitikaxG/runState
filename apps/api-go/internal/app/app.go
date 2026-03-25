@@ -18,6 +18,7 @@ import (
 	"github.com/RitikaxG/runState/apps/api-go/internal/routes"
 	"github.com/RitikaxG/runState/apps/api-go/internal/service"
 	"github.com/RitikaxG/runState/apps/api-go/internal/validation"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -47,7 +48,25 @@ func BuildServer() (*App, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	r := gin.Default()
-
+	r.Use(cors.New(cors.Config{
+		AllowOrigins: []string{
+			"http://localhost:3000",
+		},
+		AllowMethods: []string{
+			"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS",
+		},
+		AllowHeaders: []string{
+			"Origin",
+			"Content-Type",
+			"Accept",
+			"Authorization",
+		},
+		ExposeHeaders: []string{
+			"Content-Length",
+		},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 	metrics.Init()
 	r.Use(middleware.PrometheusMiddleware())
 	// Prometheus should scrape metrics directly from root
