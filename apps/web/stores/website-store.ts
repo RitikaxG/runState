@@ -1,7 +1,7 @@
 'use client'
 
 import { create } from 'zustand'
-import { websiteAPI } from '../lib/api'
+import { websiteAPI, APIError } from '../lib/api'
 import { useAuthStore } from './auth-store'
 import type {
   Website,
@@ -50,16 +50,41 @@ interface WebsitesStore {
   clearSelection: () => void
 }
 
-function getAccessToken(): string {
-  const token = useAuthStore.getState().accessToken
-  if (!token) {
-    throw new Error('No auth token')
-  }
-  return token
-}
-
 function getErrorMessage(err: unknown, fallback: string): string {
   return err instanceof Error ? err.message : fallback
+}
+
+async function getValidAccessToken(): Promise<string> {
+  const auth = useAuthStore.getState()
+
+  if (auth.accessToken) return auth.accessToken
+
+  if (auth.refreshToken) {
+    const ok = await auth.refreshAccessToken()
+    const nextToken = useAuthStore.getState().accessToken
+
+    if (ok && nextToken) return nextToken
+  }
+
+  throw new Error('Session expired. Please sign in again.')
+}
+
+async function withAuthRetry<T>(fn: (token: string) => Promise<T>): Promise<T> {
+  try {
+    const token = await getValidAccessToken()
+    return await fn(token)
+  } catch (err) {
+    if (err instanceof APIError && err.status === 401) {
+      const ok = await useAuthStore.getState().refreshAccessToken()
+      const nextToken = useAuthStore.getState().accessToken
+
+      if (ok && nextToken) {
+        return await fn(nextToken)
+      }
+    }
+
+    throw err
+  }
 }
 
 export const useWebsitesStore = create<WebsitesStore>((set, get) => ({
@@ -92,7 +117,7 @@ export const useWebsitesStore = create<WebsitesStore>((set, get) => ({
     try {
       set({ isLoadingWebsites: true, websitesError: null })
 
-      const response = await websiteAPI.getAll(getAccessToken())
+      const response = await withAuthRetry((token) => websiteAPI.getAll(token))
       const items = response.data?.websites ?? []
 
       const websites: Website[] = items.map((item) => ({
@@ -122,7 +147,9 @@ export const useWebsitesStore = create<WebsitesStore>((set, get) => ({
     try {
       set({ isLoadingWebsites: true, websitesError: null })
 
-      const response = await websiteAPI.create(url, getAccessToken())
+      const response = await withAuthRetry((token) =>
+        websiteAPI.create(url, token)
+      )
 
       if (!response.success) {
         throw new Error(response.error || 'Failed to create website')
@@ -140,7 +167,9 @@ export const useWebsitesStore = create<WebsitesStore>((set, get) => ({
 
   deleteWebsite: async (id: string) => {
     try {
-      const response = await websiteAPI.delete(id, getAccessToken())
+      const response = await withAuthRetry((token) =>
+        websiteAPI.delete(id, token)
+      )
 
       if (!response.success) {
         throw new Error(response.error || 'Failed to delete website')
@@ -169,7 +198,9 @@ export const useWebsitesStore = create<WebsitesStore>((set, get) => ({
     try {
       set({ isLoadingDetail: true, detailError: null })
 
-      const response = await websiteAPI.getById(id, getAccessToken())
+      const response = await withAuthRetry((token) =>
+        websiteAPI.getById(id, token)
+      )
       const item = response.data?.website
 
       if (!item) {
@@ -215,7 +246,9 @@ export const useWebsitesStore = create<WebsitesStore>((set, get) => ({
     try {
       set({ isLoadingChecks: true, checksError: null })
 
-      const response = await websiteAPI.getChecks(websiteId, getAccessToken())
+      const response = await withAuthRetry((token) =>
+        websiteAPI.getChecks(websiteId, token)
+      )
       const items = response.data?.checks ?? []
 
       const checks: Check[] = items.map((item) => ({
@@ -246,7 +279,9 @@ export const useWebsitesStore = create<WebsitesStore>((set, get) => ({
     try {
       set({ isLoadingResponseTimes: true, responseTimesError: null })
 
-      const response = await websiteAPI.getResponseTimes(websiteId, getAccessToken())
+      const response = await withAuthRetry((token) =>
+        websiteAPI.getResponseTimes(websiteId, token)
+      )
       const items = response.data?.points ?? []
 
       const responseTimes: ResponseTime[] = items.map((item) => ({
@@ -275,7 +310,9 @@ export const useWebsitesStore = create<WebsitesStore>((set, get) => ({
     try {
       set({ isLoadingIncidents: true, incidentsError: null })
 
-      const response = await websiteAPI.getIncidents(websiteId, getAccessToken())
+      const response = await withAuthRetry((token) =>
+        websiteAPI.getIncidents(websiteId, token)
+      )
       const items = response.data?.incidents ?? []
 
       const incidents: Incident[] = items.map((item) => ({
@@ -307,7 +344,9 @@ export const useWebsitesStore = create<WebsitesStore>((set, get) => ({
     try {
       set({ isLoadingNotifications: true, notificationsError: null })
 
-      const response = await websiteAPI.getNotifications(websiteId, getAccessToken())
+      const response = await withAuthRetry((token) =>
+        websiteAPI.getNotifications(websiteId, token)
+      )
       const items = response.data?.items ?? []
 
       const notifications: Notification[] = items.map((item) => ({

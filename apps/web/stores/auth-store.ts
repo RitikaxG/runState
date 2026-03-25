@@ -11,13 +11,16 @@ interface AuthStore {
   refreshToken: string | null
   isAuthenticated: boolean
   isLoading: boolean
+  isHydrated: boolean
   error: string | null
 
   signin: (email: string, password: string) => Promise<void>
   signup: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
-  refreshAccessToken: () => Promise<void>
+  refreshAccessToken: () => Promise<boolean>
   clearError: () => void
+  clearAuthState: () => void
+  setHydrated: (value: boolean) => void
 }
 
 const isProduction = process.env.NODE_ENV === 'production'
@@ -43,15 +46,14 @@ function clearTokenCookie(name: string) {
 }
 
 function getErrorMessage(err: unknown, fallback: string) {
-  if (err instanceof APIError) {
-    return err.message
-  }
-
-  if (err instanceof Error) {
-    return err.message
-  }
-
+  if (err instanceof APIError) return err.message
+  if (err instanceof Error) return err.message
   return fallback
+}
+
+function clearAllAuthCookies() {
+  clearTokenCookie('access_token')
+  clearTokenCookie('refresh_token')
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -62,7 +64,22 @@ export const useAuthStore = create<AuthStore>()(
       refreshToken: null,
       isAuthenticated: false,
       isLoading: false,
+      isHydrated: false,
       error: null,
+
+      setHydrated: (value: boolean) => set({ isHydrated: value }),
+
+      clearAuthState: () => {
+        clearAllAuthCookies()
+        set({
+          user: null,
+          accessToken: null,
+          refreshToken: null,
+          isAuthenticated: false,
+          isLoading: false,
+          error: null,
+        })
+      },
 
       signin: async (email: string, password: string) => {
         try {
@@ -97,17 +114,11 @@ export const useAuthStore = create<AuthStore>()(
             error: null,
           })
         } catch (err) {
-          const errorMessage = getErrorMessage(err, 'Signin failed')
-
+          get().clearAuthState()
           set({
-            user: null,
-            accessToken: null,
-            refreshToken: null,
-            isAuthenticated: false,
             isLoading: false,
-            error: errorMessage,
+            error: getErrorMessage(err, 'Signin failed'),
           })
-
           throw err
         }
       },
@@ -124,13 +135,10 @@ export const useAuthStore = create<AuthStore>()(
 
           await get().signin(email, password)
         } catch (err) {
-          const errorMessage = getErrorMessage(err, 'Signup failed')
-
           set({
             isLoading: false,
-            error: errorMessage,
+            error: getErrorMessage(err, 'Signup failed'),
           })
-
           throw err
         }
       },
@@ -145,19 +153,9 @@ export const useAuthStore = create<AuthStore>()(
             await authAPI.logout(refreshToken)
           }
         } catch {
-          // Ignore logout API failure and still clear client auth state
+          // still clear local auth state for demo UX
         } finally {
-          clearTokenCookie('access_token')
-          clearTokenCookie('refresh_token')
-
-          set({
-            user: null,
-            accessToken: null,
-            refreshToken: null,
-            isAuthenticated: false,
-            isLoading: false,
-            error: null,
-          })
+          get().clearAuthState()
         }
       },
 
@@ -166,14 +164,17 @@ export const useAuthStore = create<AuthStore>()(
           const refreshToken = get().refreshToken
 
           if (!refreshToken) {
-            throw new Error('No refresh token available')
+            get().clearAuthState()
+            return false
           }
 
           const response = await authAPI.refreshToken(refreshToken)
           const data = response.data
 
           if (!response.success || !data) {
-            throw new Error(response.error || 'Failed to refresh session')
+            get().clearAuthState()
+            set({ error: 'Session expired. Please sign in again.' })
+            return false
           }
 
           const accessExpiresAt = new Date(Date.now() + 60 * 60 * 1000)
@@ -188,18 +189,14 @@ export const useAuthStore = create<AuthStore>()(
             isAuthenticated: true,
             error: null,
           })
-        } catch {
-          clearTokenCookie('access_token')
-          clearTokenCookie('refresh_token')
 
+          return true
+        } catch {
+          get().clearAuthState()
           set({
-            user: null,
-            accessToken: null,
-            refreshToken: null,
-            isAuthenticated: false,
-            isLoading: false,
             error: 'Session expired. Please sign in again.',
           })
+          return false
         }
       },
 
@@ -214,6 +211,9 @@ export const useAuthStore = create<AuthStore>()(
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHydrated(true)
+      },
     }
   )
 )
