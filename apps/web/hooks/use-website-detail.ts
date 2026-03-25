@@ -10,12 +10,19 @@ export function useWebsiteDetail(websiteId: string) {
     responseTimes,
     incidents,
     notifications,
+
     isLoadingDetail,
     isLoadingChecks,
     isLoadingResponseTimes,
     isLoadingIncidents,
     isLoadingNotifications,
+
     detailError,
+    checksError,
+    responseTimesError,
+    incidentsError,
+    notificationsError,
+
     fetchWebsiteDetail,
     fetchChecks,
     fetchResponseTimes,
@@ -40,20 +47,24 @@ export function useWebsiteDetail(websiteId: string) {
     fetchNotifications,
   ])
 
-  const isLoading =
-    isLoadingDetail ||
-    isLoadingChecks ||
-    isLoadingResponseTimes ||
-    isLoadingIncidents ||
-    isLoadingNotifications
-
   return {
     website: selectedWebsite,
+
     checks,
     responseTimes,
     incidents,
     notifications,
-    isLoading,
-    error: detailError,
+
+    isLoadingDetail,
+    isLoadingChecks,
+    isLoadingResponseTimes,
+    isLoadingIncidents,
+    isLoadingNotifications,
+
+    detailError,
+    checksError,
+    responseTimesError,
+    incidentsError,
+    notificationsError,
   }
 }

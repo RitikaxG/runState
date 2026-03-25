@@ -12,7 +12,7 @@ import { ChecksTable } from '../../../../components/website/checks-table'
 import { IncidentsList } from '../../../../components/website/incident-list'
 import { NotificationsList } from '../../../../components/website/notification-list'
 import { ResponseTimeChart } from '../../../../components/website/response-time-chart'
-import { formatDateTime } from '../../../../lib/utils'
+import { formatDateTime, formatResponseTime } from '../../../../lib/utils'
 import { ROUTES } from '../../../../lib/constants'
 
 export default function WebsiteDetailPage({
@@ -24,22 +24,33 @@ export default function WebsiteDetailPage({
 
   const {
     website,
+
     checks,
     responseTimes,
     incidents,
     notifications,
-    isLoading,
-    error,
+
+    isLoadingDetail,
+    isLoadingChecks,
+    isLoadingResponseTimes,
+    isLoadingIncidents,
+    isLoadingNotifications,
+
+    detailError,
+    checksError,
+    responseTimesError,
+    incidentsError,
+    notificationsError,
   } = useWebsiteDetail(params.id)
 
-  if (isLoading) {
+  if (isLoadingDetail) {
     return <LoadingState />
   }
 
-  if (error || !website) {
+  if (detailError || !website) {
     return (
       <ErrorState
-        message={error || 'Website not found'}
+        message={detailError || 'Website not found'}
         onRetry={() => router.push(ROUTES.DASHBOARD)}
       />
     )
@@ -67,23 +78,96 @@ export default function WebsiteDetailPage({
         </Button>
       </div>
 
-      {responseTimes.length > 0 && (
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
         <Card>
           <CardBody>
-            <ResponseTimeChart data={responseTimes} />
+            <p className="text-sm text-gray-500">Current Status</p>
+            <div className="mt-3">
+              <StatusBadge status={website.currentStatus} size="md" />
+            </div>
           </CardBody>
         </Card>
-      )}
+
+        <Card>
+          <CardBody>
+            <p className="text-sm text-gray-500">Last Checked</p>
+            <p className="mt-3 text-base font-semibold text-gray-900">
+              {website.lastCheckedAt ? formatDateTime(website.lastCheckedAt) : 'Never'}
+            </p>
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardBody>
+            <p className="text-sm text-gray-500">Latest Response Time</p>
+            <p className="mt-3 text-base font-semibold text-gray-900">
+              {formatResponseTime(website.latestResponseTimeMs)}
+            </p>
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardBody>
+            <p className="text-sm text-gray-500">Incident Status</p>
+            <p
+              className={`mt-3 text-base font-semibold ${
+                website.activeIncident?.isActive ? 'text-red-600' : 'text-green-600'
+              }`}
+            >
+              {website.activeIncident?.isActive ? 'Active Incident' : 'No Active Incident'}
+            </p>
+            {website.activeIncident?.isActive && (
+              <p className="mt-1 text-sm text-gray-500">
+                Started {formatDateTime(website.activeIncident.startedAt)}
+              </p>
+            )}
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardBody>
+            <p className="text-sm text-gray-500">Monitor Created</p>
+            <p className="mt-3 text-base font-semibold text-gray-900">
+              {formatDateTime(website.timeAdded)}
+            </p>
+          </CardBody>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <h2 className="text-2xl font-bold text-gray-900">Response Time</h2>
+        </CardHeader>
+        <CardBody>
+          {isLoadingResponseTimes ? (
+            <LoadingState />
+          ) : responseTimesError ? (
+            <ErrorState message={responseTimesError} />
+          ) : responseTimes.length === 0 ? (
+            <EmptyState
+              title="No response time data"
+              description="Response time points will appear once checks start running."
+              icon="📈"
+            />
+          ) : (
+            <ResponseTimeChart data={responseTimes} />
+          )}
+        </CardBody>
+      </Card>
 
       <Card>
         <CardHeader>
           <h2 className="text-2xl font-bold text-gray-900">Recent Checks</h2>
         </CardHeader>
         <CardBody>
-          {checks.length === 0 ? (
+          {isLoadingChecks ? (
+            <LoadingState />
+          ) : checksError ? (
+            <ErrorState message={checksError} />
+          ) : checks.length === 0 ? (
             <EmptyState
               title="No checks yet"
-              description="Checks will appear once monitoring starts"
+              description="Checks will appear once monitoring starts."
               icon="⏳"
             />
           ) : (
@@ -97,11 +181,15 @@ export default function WebsiteDetailPage({
           <h2 className="text-2xl font-bold text-gray-900">Incidents</h2>
         </CardHeader>
         <CardBody>
-          {incidents.length === 0 ? (
+          {isLoadingIncidents ? (
+            <LoadingState />
+          ) : incidentsError ? (
+            <ErrorState message={incidentsError} />
+          ) : incidents.length === 0 ? (
             <EmptyState
               title="No incidents"
-              description="Website has been running smoothly"
-              icon="✓"
+              description="This website has no recorded incidents yet."
+              icon="✅"
             />
           ) : (
             <IncidentsList incidents={incidents} />
@@ -114,10 +202,14 @@ export default function WebsiteDetailPage({
           <h2 className="text-2xl font-bold text-gray-900">Notifications</h2>
         </CardHeader>
         <CardBody>
-          {notifications.length === 0 ? (
+          {isLoadingNotifications ? (
+            <LoadingState />
+          ) : notificationsError ? (
+            <ErrorState message={notificationsError} />
+          ) : notifications.length === 0 ? (
             <EmptyState
               title="No notifications"
-              description="No alerts have been sent yet"
+              description="No alerts have been sent for this website yet."
               icon="📭"
             />
           ) : (

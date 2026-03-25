@@ -156,11 +156,11 @@ export const authAPI = {
 
 export const websiteAPI = {
   getAll: (token: string) =>
-    makeRequest<GetWebsitesResponse>("/websites", { method: "GET" }, token),
+    makeRequest<GetWebsitesResponse>("/websites/", { method: "GET" }, token),
 
   create: (url: string, token: string) =>
     makeRequest<CreateWebsiteResponse>(
-      "/websites",
+      "/websites/",
       {
         method: "POST",
         body: JSON.stringify({ url }),
