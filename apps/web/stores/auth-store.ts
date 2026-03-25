@@ -86,18 +86,20 @@ export const useAuthStore = create<AuthStore>()(
           set({ isLoading: true, error: null })
 
           const response = await authAPI.signin(email, password)
-          const authData = response.data
 
-          if (!response.success || !authData) {
+          if (!response.success) {
             throw new Error(response.error || 'Signin failed')
           }
 
-          const userRes = await authAPI.me(authData.access_token)
-          const userData = userRes.data
+          const authData = response.data
 
-          if (!userRes.success || !userData) {
+          const userRes = await authAPI.me(authData.access_token)
+
+          if (!userRes.success) {
             throw new Error(userRes.error || 'Failed to load user profile')
           }
+
+          const userData = userRes.data
 
           const accessExpiresAt = new Date(Date.now() + 60 * 60 * 1000)
           const refreshExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
@@ -150,7 +152,11 @@ export const useAuthStore = create<AuthStore>()(
           set({ isLoading: true, error: null })
 
           if (refreshToken) {
-            await authAPI.logout(refreshToken)
+            const response = await authAPI.logout(refreshToken)
+
+            if (!response.success) {
+              throw new Error(response.error || 'Logout failed')
+            }
           }
         } catch {
           // still clear local auth state for demo UX
@@ -169,13 +175,14 @@ export const useAuthStore = create<AuthStore>()(
           }
 
           const response = await authAPI.refreshToken(refreshToken)
-          const data = response.data
 
-          if (!response.success || !data) {
+          if (!response.success) {
             get().clearAuthState()
-            set({ error: 'Session expired. Please sign in again.' })
+            set({ error: response.error || 'Session expired. Please sign in again.' })
             return false
           }
+
+          const data = response.data
 
           const accessExpiresAt = new Date(Date.now() + 60 * 60 * 1000)
           const refreshExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)

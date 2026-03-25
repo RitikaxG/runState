@@ -1,60 +1,48 @@
 import type { UserRole, WebsiteStatus } from './common'
 
-// =====================
-// API-ONLY SHARED TYPES
-// =====================
+export type ApiSuccessResponse<T> = {
+  success: true
+  data: T
+  message?: string
+}
+
+export type ApiErrorResponse = {
+  success: false
+  error: string
+  message?: string
+}
+
+export type APIResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse
 
 export type NotificationChannel = 'email' | 'webhook' | 'sms' | string
 export type DeliveryStatus = 'pending' | 'sent' | 'failed' | string
 
-// Common response wrapper used by most endpoints
-export type APIResponse<T> = {
-  success: boolean
-  data?: T
-  message?: string
-  error?: string
-}
-
-// ============ AUTH TYPES ============
-
-export type SignupRequest = {
-  email: string
-  password: string
-}
-
-export type SignupResponse = {
+export type SignupResponseData = {
   id: string
   email: string
   role: UserRole
 }
 
-export type SigninRequest = {
-  email: string
-  password: string
-}
+export type SignupResponse = APIResponse<SignupResponseData>
 
-export type SigninResponse = {
+export type SigninResponseData = {
   access_token: string
   refresh_token: string
 }
 
-export type MeResponse = {
+export type SigninResponse = APIResponse<SigninResponseData>
+
+export type MeResponseData = {
   id: string
   email: string
   role: UserRole
 }
 
-export type RefreshTokenRequest = {
-  refresh_token: string
-}
+export type MeResponse = APIResponse<MeResponseData>
 
-export type LogoutRequest = {
-  refresh_token: string
-}
+export type LogoutResponse = APIResponse<null>
 
-// ============ WEBSITE TYPES ============
-
-export type WebsiteListItem = {
+export type WebsiteListItemDTO = {
   id: string
   url: string
   current_status: WebsiteStatus | null
@@ -63,91 +51,81 @@ export type WebsiteListItem = {
   latest_response_time_ms: number | null
 }
 
-export type GetWebsitesResponse = APIResponse<{
-  websites: WebsiteListItem[]
-}>
-
-export type CreateWebsiteRequest = {
-  url: string
-}
-
-export type CreateWebsiteResponse = APIResponse<{
-  website: WebsiteListItem
-}>
-
-export type IncidentSummary = {
+export type IncidentSummaryDTO = {
   id: string
   website_id: string
-  region_id?: string | null
+  region_id: string | null
   started_at: string
-  resolved_at?: string | null
+  resolved_at: string | null
   is_active: boolean
   current_status: WebsiteStatus
   duration_seconds: number
 }
 
-export type WebsiteDetail = {
+export type WebsiteDetailDTO = {
   id: string
   url: string
   current_status: WebsiteStatus | null
   time_added: string
   last_checked_at: string | null
   latest_response_time_ms: number | null
-  active_incident: IncidentSummary | null
+  active_incident: IncidentSummaryDTO | null
 }
 
-export type GetWebsiteDetailResponse = APIResponse<{
-  website: WebsiteDetail
+export type GetWebsitesResponse = APIResponse<{
+  websites: WebsiteListItemDTO[]
 }>
 
-// ============ MONITORING TYPES ============
+export type CreateWebsiteResponse = APIResponse<{
+  website: WebsiteListItemDTO
+}>
 
-export type WebsiteCheckItem = {
+export type GetWebsiteDetailResponse = APIResponse<{
+  website: WebsiteDetailDTO
+}>
+
+export type WebsiteCheckItemDTO = {
   id: string
   website_id: string
   region_id: string
   status: WebsiteStatus
   response_time_ms: number | null
   created_at: string
-  region_name?: string | null
+  region_name: string | null
 }
 
-export type GetWebsiteChecksResponse = APIResponse<{
-  checks: WebsiteCheckItem[]
-}>
-
-export type ResponseTimePoint = {
+export type ResponseTimePointDTO = {
   timestamp: string
   response_time_ms: number | null
   status: WebsiteStatus
   region_id: string
-  region_name?: string | null
+  region_name: string | null
 }
 
-export type GetWebsiteResponseTimesResponse = APIResponse<{
-  points: ResponseTimePoint[]
+export type GetWebsiteChecksResponse = APIResponse<{
+  checks: WebsiteCheckItemDTO[]
 }>
 
-// ============ INCIDENT TYPES ============
+export type GetWebsiteResponseTimesResponse = APIResponse<{
+  points: ResponseTimePointDTO[]
+}>
 
-export type IncidentResponse = {
+export type IncidentResponseDTO = {
   id: string
   website_id: string
-  region_id?: string | null
+  region_id: string | null
   started_at: string
-  resolved_at?: string | null
+  resolved_at: string | null
   is_active: boolean
   current_status: WebsiteStatus
   duration_seconds: number
 }
 
 export type GetWebsiteIncidentsResponse = APIResponse<{
-  incidents: IncidentResponse[]
+  incidents: IncidentResponseDTO[]
 }>
 
-// ============ NOTIFICATION TYPES ============
-
-export type NotificationLogResponse = {
+export type NotificationLogResponseDTO = {
   id: string
   channel: NotificationChannel
   recipient: string
@@ -159,15 +137,15 @@ export type NotificationLogResponse = {
 }
 
 export type GetWebsiteNotificationsResponse = APIResponse<{
-  items: NotificationLogResponse[]
+  items: NotificationLogResponseDTO[]
 }>
 
-export type PublicStatusWebsiteItem = {
+export type PublicStatusWebsiteItemDTO = {
   id: string
   url: string
   current_status: WebsiteStatus
 }
 
 export type GetPublicStatusPageResponse = APIResponse<{
-  websites: PublicStatusWebsiteItem[]
+  websites: PublicStatusWebsiteItemDTO[]
 }>

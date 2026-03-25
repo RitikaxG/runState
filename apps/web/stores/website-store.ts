@@ -3,6 +3,14 @@
 import { create } from 'zustand'
 import { websiteAPI, APIError } from '../lib/api'
 import { useAuthStore } from './auth-store'
+import {
+  mapWebsiteListItemDTO,
+  mapWebsiteDetailDTO,
+  mapCheckDTO,
+  mapResponseTimeDTO,
+  mapIncidentDTO,
+  mapNotificationDTO,
+} from '../lib/mappers'
 import type {
   Website,
   WebsiteDetail,
@@ -118,16 +126,12 @@ export const useWebsitesStore = create<WebsitesStore>((set, get) => ({
       set({ isLoadingWebsites: true, websitesError: null })
 
       const response = await withAuthRetry((token) => websiteAPI.getAll(token))
-      const items = response.data?.websites ?? []
 
-      const websites: Website[] = items.map((item) => ({
-        id: item.id,
-        url: item.url,
-        currentStatus: item.current_status,
-        timeAdded: item.time_added,
-        lastCheckedAt: item.last_checked_at,
-        latestResponseTimeMs: item.latest_response_time_ms,
-      }))
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch websites')
+      }
+
+      const websites = response.data.websites.map(mapWebsiteListItemDTO)
 
       set({
         websites,
@@ -201,32 +205,12 @@ export const useWebsitesStore = create<WebsitesStore>((set, get) => ({
       const response = await withAuthRetry((token) =>
         websiteAPI.getById(id, token)
       )
-      const item = response.data?.website
 
-      if (!item) {
-        throw new Error(response.error || 'Website detail not found')
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch website detail')
       }
 
-      const selectedWebsite: WebsiteDetail = {
-        id: item.id,
-        url: item.url,
-        currentStatus: item.current_status,
-        timeAdded: item.time_added,
-        lastCheckedAt: item.last_checked_at,
-        latestResponseTimeMs: item.latest_response_time_ms,
-        activeIncident: item.active_incident
-          ? {
-              id: item.active_incident.id,
-              websiteId: item.active_incident.website_id,
-              regionId: item.active_incident.region_id ?? null,
-              startedAt: item.active_incident.started_at,
-              resolvedAt: item.active_incident.resolved_at ?? null,
-              isActive: item.active_incident.is_active,
-              currentStatus: item.active_incident.current_status,
-              durationSeconds: item.active_incident.duration_seconds,
-            }
-          : null,
-      }
+      const selectedWebsite = mapWebsiteDetailDTO(response.data.website)
 
       set({
         selectedWebsite,
@@ -249,17 +233,12 @@ export const useWebsitesStore = create<WebsitesStore>((set, get) => ({
       const response = await withAuthRetry((token) =>
         websiteAPI.getChecks(websiteId, token)
       )
-      const items = response.data?.checks ?? []
 
-      const checks: Check[] = items.map((item) => ({
-        id: item.id,
-        websiteId: item.website_id,
-        regionId: item.region_id,
-        status: item.status,
-        responseTimeMs: item.response_time_ms,
-        createdAt: item.created_at,
-        regionName: item.region_name ?? null,
-      }))
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch checks')
+      }
+
+      const checks = response.data.checks.map(mapCheckDTO)
 
       set({
         checks,
@@ -282,15 +261,12 @@ export const useWebsitesStore = create<WebsitesStore>((set, get) => ({
       const response = await withAuthRetry((token) =>
         websiteAPI.getResponseTimes(websiteId, token)
       )
-      const items = response.data?.points ?? []
 
-      const responseTimes: ResponseTime[] = items.map((item) => ({
-        timestamp: item.timestamp,
-        responseTimeMs: item.response_time_ms,
-        status: item.status,
-        regionId: item.region_id,
-        regionName: item.region_name ?? null,
-      }))
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch response times')
+      }
+
+      const responseTimes = response.data.points.map(mapResponseTimeDTO)
 
       set({
         responseTimes,
@@ -313,18 +289,12 @@ export const useWebsitesStore = create<WebsitesStore>((set, get) => ({
       const response = await withAuthRetry((token) =>
         websiteAPI.getIncidents(websiteId, token)
       )
-      const items = response.data?.incidents ?? []
 
-      const incidents: Incident[] = items.map((item) => ({
-        id: item.id,
-        websiteId: item.website_id,
-        regionId: item.region_id ?? null,
-        startedAt: item.started_at,
-        resolvedAt: item.resolved_at ?? null,
-        isActive: item.is_active,
-        currentStatus: item.current_status,
-        durationSeconds: item.duration_seconds,
-      }))
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch incidents')
+      }
+
+      const incidents = response.data.incidents.map(mapIncidentDTO)
 
       set({
         incidents,
@@ -347,18 +317,12 @@ export const useWebsitesStore = create<WebsitesStore>((set, get) => ({
       const response = await withAuthRetry((token) =>
         websiteAPI.getNotifications(websiteId, token)
       )
-      const items = response.data?.items ?? []
 
-      const notifications: Notification[] = items.map((item) => ({
-        id: item.id,
-        channel: item.channel,
-        recipient: item.recipient,
-        prevStatus: item.prev_status,
-        currentStatus: item.current_status,
-        deliveryStatus: item.delivery_status,
-        sentAt: item.sent_at,
-        regionId: item.region_id,
-      }))
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch notifications')
+      }
+
+      const notifications = response.data.items.map(mapNotificationDTO)
 
       set({
         notifications,
