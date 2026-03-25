@@ -4,9 +4,7 @@
     "skipLibCheck": true,
     "moduleResolution": "bundler",
     "jsx": "preserve",
-     "paths": {
-      "react": [ "./node_modules/@types/react" ]
-    },
+   
     "plugins": [
       {
         "name": "next"
@@ -17,7 +15,7 @@
     "**/*.ts",
     "**/*.tsx",
     "next-env.d.ts",
-    "next.config.ts",
+    "next.config.js",
     ".next/types/**/*.ts"
   ],
   "exclude": ["node_modules"]
