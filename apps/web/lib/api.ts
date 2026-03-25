@@ -10,6 +10,7 @@ import type {
   GetWebsiteResponseTimesResponse,
   GetWebsiteIncidentsResponse,
   GetWebsiteNotificationsResponse,
+  GetPublicStatusPageResponse,
 } from "../types/api";
 
 const API_BASE_URL =
@@ -222,5 +223,8 @@ export const websiteAPI = {
 
 export const publicAPI = {
   getStatusPage: (slug: string) =>
-    makeRequest<unknown>(`/public/status-pages/${slug}`, { method: "GET" }),
+  makeRequest<GetPublicStatusPageResponse>(
+    `/public/status-pages/${slug}`,
+    { method: "GET" }
+  ),
 };

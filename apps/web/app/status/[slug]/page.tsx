@@ -33,12 +33,15 @@ export default function StatusPage({
         setError(null)
 
         const response = await publicAPI.getStatusPage(params.slug)
+        const websites = response.data?.websites ?? []
 
-        // If your API helper returns parsed JSON directly, use:
-        setData(response as StatusPageData)
-
-        // If it is axios-based, replace the line above with:
-        // setData(response.data)
+        setData({
+          websites: websites.map((website) => ({
+            id: website.id,
+            url: website.url,
+            currentStatus: website.current_status,
+          })),
+        })
       } catch (err) {
         setError(parseErrorMessage(err))
       } finally {

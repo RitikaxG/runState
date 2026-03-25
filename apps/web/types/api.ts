@@ -161,3 +161,13 @@ export type NotificationLogResponse = {
 export type GetWebsiteNotificationsResponse = APIResponse<{
   items: NotificationLogResponse[]
 }>
+
+export type PublicStatusWebsiteItem = {
+  id: string
+  url: string
+  current_status: WebsiteStatus
+}
+
+export type GetPublicStatusPageResponse = APIResponse<{
+  websites: PublicStatusWebsiteItem[]
+}>
