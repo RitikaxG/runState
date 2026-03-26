@@ -14,6 +14,7 @@ func RegisterRouter(
 	authHandler *handlers.AuthHandler,
 	incidentHandler *handlers.IncidentHandler,
 	notificationLogHandler *handlers.NotificationLogHandler,
+	publicStatusHandler *handlers.PublicStatusHandler,
 	jwtManager *auth.JWTManager) {
 	v1 := r.Group("/api/v1") // gin.Engine : Builds the server
 
@@ -24,4 +25,5 @@ func RegisterRouter(
 	RegisterAdminRouter(v1, jwtManager, userHandler)
 	RegisterAuthRouter(v1, authHandler)
 	RegisterWebsiteTicksRouter(v1, websiteTicksHandler, jwtManager)
+	RegisterPublicStatusRouter(v1, publicStatusHandler)
 }

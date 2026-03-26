@@ -5,6 +5,7 @@ import "time"
 type WebsiteDetailResponse struct {
 	ID                   string      `json:"id"`
 	URL                  string      `json:"url"`
+	Slug                 string      `json:"slug"`
 	CurrentStatus        string      `json:"current_status"`
 	TimeAdded            time.Time   `json:"time_added"`
 	LastCheckedAt        *time.Time  `json:"last_checked_at"`

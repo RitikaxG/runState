@@ -85,9 +85,9 @@ func NewWebsiteRepository(db *sqlx.DB) WebsiteRepository {
 
 func (r *websiteRepository) Create(ctx context.Context, website *domain.Website) error {
 	query := `
-	INSERT INTO website (user_id, url)
-	VALUES ($1, $2) 
-	RETURNING id, user_id, url, time_added
+	INSERT INTO website (user_id, url, slug)
+	VALUES ($1, $2, $3) 
+	RETURNING id, user_id, url,slug, time_added
 	`
 
 	err := r.db.QueryRowxContext(
@@ -95,6 +95,7 @@ func (r *websiteRepository) Create(ctx context.Context, website *domain.Website)
 		query,
 		website.UserID,
 		website.URL,
+		website.Slug,
 	).Scan(&website.ID, &website.UserID, &website.URL, &website.TimeAdded)
 
 	if err != nil {
@@ -121,7 +122,7 @@ func (r *websiteRepository) GetByID(
 ) (*domain.Website, error) {
 
 	query := `
-	SELECT id , url, user_id, time_added, current_status
+	SELECT id , url, user_id, slug, time_added, current_status
 	FROM website 
 	WHERE id = $1
 	`
@@ -199,7 +200,8 @@ func (r *websiteRepository) ListAllWebsites(
 	ctx context.Context,
 ) ([]domain.Website, error) {
 	query := `
-	SELECT * FROM website
+	SELECT id, url, user_id, slug, current_status, time_added
+	FROM website
 	`
 
 	var websites []domain.Website
@@ -255,4 +257,26 @@ func (r *websiteRepository) GetUserEmailByWebsiteID(
 	}
 
 	return email, nil
+}
+
+func (r *websiteRepository) GetBySlug(
+	ctx context.Context,
+	slug string,
+) (*domain.Website, error) {
+	query := `
+	SELECT id, url, user_id, slug, time_added, current_status
+	FROM website
+	WHERE slug = $1
+	`
+
+	var website domain.Website
+	err := r.db.QueryRowxContext(ctx, query, slug).StructScan(&website)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, domain.ErrWebsiteNotFound
+		}
+		return nil, err
+	}
+
+	return &website, nil
 }

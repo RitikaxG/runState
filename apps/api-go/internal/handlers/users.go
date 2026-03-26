@@ -55,6 +55,7 @@ func (h *UserHandler) Signup(c *gin.Context) {
 	signupResp := dto.SignupResponse{
 		ID:    user.ID,
 		Email: user.Email,
+		Role:  string(user.Role),
 	}
 
 	// 4. Send success request

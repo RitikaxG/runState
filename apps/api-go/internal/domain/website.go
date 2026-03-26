@@ -43,6 +43,7 @@ type Website struct {
 	ID            string         `db:"id"`
 	UserID        string         `db:"user_id"`
 	URL           string         `db:"url"`
+	Slug          string         `db:"slug"`
 	TimeAdded     time.Time      `db:"time_added"`
 	CurrentStatus *WebsiteStatus `db:"current_status"` // optional
 }

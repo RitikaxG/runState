@@ -7,6 +7,7 @@ import (
 	"github.com/RitikaxG/runState/apps/api-go/internal/domain"
 	"github.com/RitikaxG/runState/apps/api-go/internal/dto"
 	"github.com/RitikaxG/runState/apps/api-go/internal/repository"
+	"github.com/google/uuid"
 )
 
 /*
@@ -85,6 +86,7 @@ func (s *WebsiteService) CreateWebsite(
 	website := &domain.Website{
 		URL:    normalisedUrl,
 		UserID: userID,
+		Slug:   uuid.NewString(),
 	}
 
 	// 4. Persist
@@ -169,6 +171,7 @@ func (s *WebsiteService) GetWebsiteDetail(
 	response := &dto.WebsiteDetailResponse{
 		ID:             website.ID,
 		URL:            website.URL,
+		Slug:           website.Slug,
 		CurrentStatus:  currentStatus,
 		TimeAdded:      website.TimeAdded,
 		ActiveIncident: nil,
