@@ -55,7 +55,7 @@ func (s *WebsiteTicksService) GetWebsiteChecks(
 	role string,
 	websiteID string,
 	limit int,
-) ([]domain.WebsiteTicks, error) {
+) ([]dto.WebsiteCheckItem, error) {
 	if limit <= 0 {
 		limit = 20
 	}
@@ -72,12 +72,25 @@ func (s *WebsiteTicksService) GetWebsiteChecks(
 		return nil, domain.ErrForbidden
 	}
 
-	ticks, err := s.repo.ListByWebsiteID(ctx, websiteID, limit)
+	ticks, err := s.repo.ListByWebsiteIDWithRegion(ctx, websiteID, limit)
 	if err != nil {
 		return nil, err
 	}
 
-	return ticks, nil
+	items := make([]dto.WebsiteCheckItem, 0, len(ticks))
+	for _, tick := range ticks {
+		items = append(items, dto.WebsiteCheckItem{
+			ID:             tick.ID,
+			WebsiteID:      tick.WebsiteID,
+			RegionID:       tick.RegionID,
+			RegionName:     tick.RegionName,
+			Status:         tick.Status,
+			ResponseTimeMs: tick.ResponseTimeMs,
+			CreatedAt:      tick.CreatedAt,
+		})
+	}
+
+	return items, nil
 }
 
 func (s *WebsiteTicksService) ListWebsitesForUser(
@@ -160,18 +173,23 @@ func (s *WebsiteTicksService) GetResponseTimes(
 		return nil, domain.ErrForbidden
 	}
 
-	ticks, err := s.repo.ListByWebsiteID(ctx, websiteID, limit)
+	ticks, err := s.repo.ListByWebsiteIDWithRegion(ctx, websiteID, limit)
 	if err != nil {
 		return nil, err
 	}
 
 	points := make([]dto.ResponseTimePoint, 0, len(ticks))
 	for _, tick := range ticks {
+		if tick.ResponseTimeMs == nil {
+			continue
+		}
+
 		points = append(points, dto.ResponseTimePoint{
 			Timestamp:      tick.CreatedAt,
 			ResponseTimeMs: tick.ResponseTimeMs,
-			Status:         string(tick.Status),
+			Status:         tick.Status,
 			RegionID:       tick.RegionID,
+			RegionName:     tick.RegionName,
 		})
 	}
 

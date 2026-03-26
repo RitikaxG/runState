@@ -61,6 +61,7 @@ func (s *NotificationLogService) ListWebsiteNotifications(
 	ctx context.Context,
 	websiteID string,
 	requesterUserID string,
+	role string,
 	limit int,
 ) ([]dto.NotificationLogResponse, error) {
 	website, err := s.websiteRepo.GetByID(ctx, websiteID)
@@ -68,7 +69,7 @@ func (s *NotificationLogService) ListWebsiteNotifications(
 		return nil, err
 	}
 
-	if website.UserID != requesterUserID {
+	if role != "ADMIN" && website.UserID != requesterUserID {
 		return nil, domain.ErrForbidden
 	}
 

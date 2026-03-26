@@ -4,8 +4,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/RitikaxG/runState/apps/api-go/internal/domain"
 	"github.com/RitikaxG/runState/apps/api-go/internal/dto"
+	"github.com/RitikaxG/runState/apps/api-go/internal/http/apperror"
+	contextutil "github.com/RitikaxG/runState/apps/api-go/internal/http/context"
+	"github.com/RitikaxG/runState/apps/api-go/internal/http/response"
 	"github.com/RitikaxG/runState/apps/api-go/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -22,16 +24,29 @@ func NewIncidentHandler(incidentService *service.IncidentService) *IncidentHandl
 
 func (h *IncidentHandler) GetWebsiteIncidents(c *gin.Context) {
 	websiteID := c.Param("id")
-
-	userIDValue, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	if websiteID == "" {
+		c.JSON(http.StatusBadRequest, response.APIResponse{
+			Success: false,
+			Error:   "website id is required",
+		})
 		return
 	}
 
-	requesterUserID, ok := userIDValue.(string)
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user context"})
+	userID, err := contextutil.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, response.APIResponse{
+			Success: false,
+			Error:   err.Error(),
+		})
+		return
+	}
+
+	role, err := contextutil.GetUserRole(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, response.APIResponse{
+			Success: false,
+			Error:   err.Error(),
+		})
 		return
 	}
 
@@ -46,20 +61,24 @@ func (h *IncidentHandler) GetWebsiteIncidents(c *gin.Context) {
 	incidents, err := h.incidentService.ListWebsiteIncidents(
 		c.Request.Context(),
 		websiteID,
-		requesterUserID,
+		userID,
+		string(role),
 		limit,
 	)
 	if err != nil {
-		switch err {
-		case domain.ErrForbidden:
-			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch incidents"})
-		}
+		status := apperror.MapErrorToHTTPStatus(err)
+		c.JSON(status, response.APIResponse{
+			Success: false,
+			Error:   err.Error(),
+		})
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.ListIncidentsResponse{
-		Incidents: incidents,
+	c.JSON(http.StatusOK, response.APIResponse{
+		Success: true,
+		Data: dto.ListIncidentsResponse{
+			Incidents: incidents,
+		},
+		Message: "Website incidents fetched successfully",
 	})
 }

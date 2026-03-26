@@ -2,10 +2,21 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/RitikaxG/runState/apps/api-go/internal/domain"
 	"github.com/jmoiron/sqlx"
 )
+
+type WebsiteTickWithRegion struct {
+	ID             string    `db:"id"`
+	WebsiteID      string    `db:"website_id"`
+	RegionID       *string   `db:"region_id"`
+	RegionName     *string   `db:"region_name"`
+	Status         string    `db:"status"`
+	ResponseTimeMs *int64    `db:"response_time_ms"`
+	CreatedAt      time.Time `db:"created_at"`
+}
 
 type websiteTicksRepository struct {
 	db *sqlx.DB
@@ -102,4 +113,34 @@ func (r *websiteTicksRepository) GetLatestByWebsiteIDs(
 	}
 
 	return result, nil
+}
+
+func (r *websiteTicksRepository) ListByWebsiteIDWithRegion(
+	ctx context.Context,
+	websiteID string,
+	limit int,
+) ([]WebsiteTickWithRegion, error) {
+	query := `
+		SELECT
+			wt.id,
+			wt.website_id,
+			wt.region_id,
+			r.name AS region_name,
+			wt.status,
+			wt.response_time_ms,
+			wt.created_at
+		FROM website_ticks wt
+		LEFT JOIN region r ON r.id = wt.region_id
+		WHERE wt.website_id = $1
+		ORDER BY wt.created_at DESC
+		LIMIT $2
+	`
+
+	var ticks []WebsiteTickWithRegion
+	err := r.db.SelectContext(ctx, &ticks, query, websiteID, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	return ticks, nil
 }

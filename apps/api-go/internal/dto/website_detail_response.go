@@ -11,3 +11,11 @@ type WebsiteDetailResponse struct {
 	LatestResponseTimeMs *int64      `json:"latest_response_time_ms"`
 	ActiveIncident       interface{} `json:"active_incident"`
 }
+
+type GetWebsiteDetailResponse struct {
+	Website WebsiteDetailResponse `json:"website"`
+}
+
+type CreateWebsiteResponse struct {
+	Website WebsiteDetailResponse `json:"website"`
+}

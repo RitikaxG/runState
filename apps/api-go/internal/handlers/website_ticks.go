@@ -6,6 +6,7 @@ import (
 
 	"github.com/RitikaxG/runState/apps/api-go/internal/domain"
 	"github.com/RitikaxG/runState/apps/api-go/internal/dto"
+	"github.com/RitikaxG/runState/apps/api-go/internal/http/apperror"
 	contextutil "github.com/RitikaxG/runState/apps/api-go/internal/http/context"
 	"github.com/RitikaxG/runState/apps/api-go/internal/http/response"
 	"github.com/RitikaxG/runState/apps/api-go/internal/service"
@@ -85,23 +86,11 @@ func (h *WebsiteTicksHandler) GetWebsiteChecks(c *gin.Context) {
 		}
 	}
 
-	items := make([]dto.WebsiteCheckItem, 0, len(checks))
-	for _, tick := range checks {
-		items = append(items, dto.WebsiteCheckItem{
-			ID:             tick.ID,
-			WebsiteID:      tick.WebsiteID,
-			RegionID:       tick.RegionID,
-			Status:         string(tick.Status),
-			ResponseTimeMs: tick.ResponseTimeMs,
-			CreatedAt:      tick.CreatedAt,
-		})
-	}
-
 	c.JSON(http.StatusOK, response.APIResponse{
 		Success: true,
 		Message: "website checks fetched successfully",
 		Data: dto.ListWebsiteChecksResponse{
-			Checks: items,
+			Checks: checks,
 		},
 	})
 }
@@ -151,20 +140,12 @@ func (h *WebsiteTicksHandler) GetWebsiteResponseTimes(c *gin.Context) {
 		limit,
 	)
 	if err != nil {
-		switch err {
-		case domain.ErrForbidden:
-			c.JSON(http.StatusForbidden, response.APIResponse{
-				Success: false,
-				Error:   "you are not allowed to access this website",
-			})
-			return
-		default:
-			c.JSON(http.StatusInternalServerError, response.APIResponse{
-				Success: false,
-				Error:   err.Error(),
-			})
-			return
-		}
+		status := apperror.MapErrorToHTTPStatus(err)
+		c.JSON(status, response.APIResponse{
+			Success: false,
+			Error:   err.Error(),
+		})
+		return
 	}
 
 	c.JSON(http.StatusOK, response.APIResponse{

@@ -80,6 +80,7 @@ func (s *IncidentService) ListWebsiteIncidents(
 	ctx context.Context,
 	websiteID string,
 	requesterUserID string,
+	role string,
 	limit int,
 ) ([]dto.IncidentResponse, error) {
 	website, err := s.websiteRepo.GetByID(ctx, websiteID)
@@ -87,7 +88,7 @@ func (s *IncidentService) ListWebsiteIncidents(
 		return nil, err
 	}
 
-	if website.UserID != requesterUserID {
+	if role != "ADMIN" && website.UserID != requesterUserID {
 		return nil, domain.ErrForbidden
 	}
 

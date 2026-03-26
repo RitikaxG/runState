@@ -215,6 +215,16 @@ func (h *WebsiteHandler) CreateWebsite(c *gin.Context) {
 		return
 	}
 
+	websiteDTO := dto.WebsiteDetailResponse{
+		ID:                   website.ID,
+		URL:                  website.URL,
+		CurrentStatus:        string(*website.CurrentStatus),
+		TimeAdded:            website.TimeAdded,
+		LastCheckedAt:        nil,
+		LatestResponseTimeMs: nil,
+		ActiveIncident:       nil,
+	}
+
 	/* 4. Return response using domain entity
 	- DB now generate data.
 	- API response should reflect persistent data
@@ -222,7 +232,7 @@ func (h *WebsiteHandler) CreateWebsite(c *gin.Context) {
 	c.JSON(http.StatusCreated, response.APIResponse{
 		Success: true,
 		Message: "website successfully created",
-		Data:    website,
+		Data:    websiteDTO,
 	})
 }
 
@@ -309,26 +319,21 @@ func (h *WebsiteHandler) GetWebsiteByID(c *gin.Context) {
 		userID,
 		string(role),
 	)
+
 	if err != nil {
-		switch err {
-		case domain.ErrForbidden:
-			c.JSON(http.StatusForbidden, response.APIResponse{
-				Success: false,
-				Error:   "you are not allowed to access this website",
-			})
-			return
-		default:
-			c.JSON(http.StatusInternalServerError, response.APIResponse{
-				Success: false,
-				Error:   err.Error(),
-			})
-			return
-		}
+		status := apperror.MapErrorToHTTPStatus(err)
+		c.JSON(status, response.APIResponse{
+			Success: false,
+			Error:   err.Error(),
+		})
+		return
 	}
 
 	c.JSON(http.StatusOK, response.APIResponse{
 		Success: true,
-		Data:    website,
+		Data: dto.GetWebsiteDetailResponse{
+			Website: *website,
+		},
 		Message: "Website fetched successfully",
 	})
 }

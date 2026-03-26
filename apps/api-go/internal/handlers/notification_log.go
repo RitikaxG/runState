@@ -40,6 +40,15 @@ func (h *NotificationLogHandler) GetWebsiteNotifications(c *gin.Context) {
 		return
 	}
 
+	role, err := contextutil.GetUserRole(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, response.APIResponse{
+			Success: false,
+			Error:   err.Error(),
+		})
+		return
+	}
+
 	limit := 20
 	if raw := c.Query("limit"); raw != "" {
 		parsed, err := strconv.Atoi(raw)
@@ -52,6 +61,7 @@ func (h *NotificationLogHandler) GetWebsiteNotifications(c *gin.Context) {
 		c.Request.Context(),
 		websiteID,
 		userID,
+		string(role),
 		limit,
 	)
 	if err != nil {
