@@ -1,12 +1,9 @@
-'use client'
-
 import type { ReactNode } from 'react'
-import { AppShell } from '../../../../components/layout/app-shell'
 
 export default function WebsiteDetailLayout({
   children,
 }: {
   children: ReactNode
 }) {
-  return <AppShell>{children}</AppShell>
+  return <>{children}</>
 }

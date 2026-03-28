@@ -13,6 +13,7 @@ import (
 
 	worker "github.com/RitikaxG/runState/apps/api-go/internal/common-worker"
 	"github.com/RitikaxG/runState/apps/api-go/internal/db"
+	"github.com/RitikaxG/runState/apps/api-go/internal/domain"
 	"github.com/RitikaxG/runState/apps/api-go/internal/redis"
 	"github.com/RitikaxG/runState/apps/api-go/internal/repository"
 	"github.com/RitikaxG/runState/apps/api-go/internal/service"
@@ -97,10 +98,10 @@ func main() {
 		incidentService,
 	)
 
-	// handler.ForceNextStatus(
-	// 	"6509ae43-40df-4704-a369-c1c8bec2d21f",
-	// 	domain.WebsiteDown,
-	// )
+	handler.ForceNextStatus(
+		"071fc72e-f57d-4996-944f-e6fcdc3b7964",
+		domain.WebsiteDown,
+	)
 
 	// ------------------ Engine ---------------------
 	engine := worker.NewEngine(

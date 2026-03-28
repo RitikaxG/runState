@@ -115,6 +115,7 @@ func (s *IncidentService) ListWebsiteIncidents(
 			ID:              inc.ID,
 			WebsiteID:       inc.WebsiteID,
 			RegionID:        inc.RegionID,
+			RegionName:      inc.RegionName,
 			StartedAt:       inc.StartedAt,
 			ResolvedAt:      inc.ResolvedAt,
 			IsActive:        inc.IsActive,

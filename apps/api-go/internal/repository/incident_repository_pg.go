@@ -98,20 +98,22 @@ func (r *incidentRepository) Resolve(ctx context.Context, incidentID string, res
 
 func (r *incidentRepository) ListByWebsiteID(ctx context.Context, websiteID string, limit int) ([]domain.Incident, error) {
 	query := `
-		SELECT
-			id,
-			website_id,
-			region_id,
-			started_at,
-			resolved_at,
-			current_status,
-			is_active,
-			created_at
-		FROM incidents
-		WHERE website_id = $1
-		ORDER BY started_at DESC
-		LIMIT $2
-	`
+	SELECT
+		i.id,
+		i.website_id,
+		i.region_id,
+		r.name AS region_name,
+		i.started_at,
+		i.resolved_at,
+		i.current_status,
+		i.is_active,
+		i.created_at
+	FROM incidents i
+	LEFT JOIN region r ON r.id = i.region_id
+	WHERE i.website_id = $1
+	ORDER BY i.started_at DESC
+	LIMIT $2
+`
 
 	rows, err := r.db.QueryContext(ctx, query, websiteID, limit)
 	if err != nil {
@@ -126,6 +128,7 @@ func (r *incidentRepository) ListByWebsiteID(ctx context.Context, websiteID stri
 			&incident.ID,
 			&incident.WebsiteID,
 			&incident.RegionID,
+			&incident.RegionName,
 			&incident.StartedAt,
 			&incident.ResolvedAt,
 			&incident.CurrentStatus,

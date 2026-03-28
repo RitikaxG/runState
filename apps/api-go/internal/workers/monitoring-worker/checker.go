@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/RitikaxG/runState/apps/api-go/internal/domain"
+	"github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -16,24 +17,26 @@ func (mw *MonitoringWorker) CheckAndUpdateStatus(
 	ctx context.Context,
 	input domain.MonitoringMessage,
 ) error {
+	// 0. If website was deleted after message was queued, drop this job.
+	exists, err := mw.websiteStillExists(ctx, input.WebsiteID)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		log.Printf("website deleted, skipping monitoring job website=%s", input.WebsiteID)
+		return nil
+	}
+
 	startTime := time.Now()
 	occurredAt := time.Now()
 
 	statusCode := 0
 
-	/*
-		- Create an http Request bound to a context.
-			* Creates HTTP GET Request to input.URL, attaches ctx to request.
-	*/
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, input.URL, nil)
 	if err != nil {
 		return err
 	}
 
-	/*
-		Execute the HTTP Response
-		- Send request over the network, ait for response or error
-	*/
 	resp, err := mw.httpClient.Do(req)
 	if err == nil && resp != nil {
 		defer resp.Body.Close()
@@ -44,26 +47,17 @@ func (mw *MonitoringWorker) CheckAndUpdateStatus(
 	responseTimeMs := time.Since(startTime).Milliseconds()
 	log.Printf("responseTimeMs=%d", responseTimeMs)
 
-	// Convert HTTP result -> domain status
 	status := mw.GetWebsiteStatus(statusCode)
 	log.Printf("status=%s", status)
 
-	// DEV / TEST OVERRIDE
 	if forced, ok := mw.forceNextStatus[input.WebsiteID]; ok {
 		log.Println("Forcing status for testing", forced)
 		status = forced
-		delete(mw.forceNextStatus, input.WebsiteID) // one-time
+		delete(mw.forceNextStatus, input.WebsiteID)
 	}
 
-	// Fetch Previous status
 	prevStatus, err := mw.GetPreviousStatus(ctx, input.WebsiteID)
 	if err != nil {
-		/* GetPreviousStatus must treat "not found" as not an error
-
-		- Else if prevStatus is not found, worker-monitoring throws an err
-		- Engine will not ACK the message, for first ever tick of website,
-		since prevStatus is not found in both Redis and DB, its a cache miss and DB miss, which should be treated as "not found" and not an error.
-		*/
 		if errors.Is(err, redis.Nil) || errors.Is(err, sql.ErrNoRows) {
 			prevStatus = nil
 		} else {
@@ -71,7 +65,8 @@ func (mw *MonitoringWorker) CheckAndUpdateStatus(
 		}
 	}
 
-	// Write monitoring tick ( append-only )
+	// 1. Try to persist the tick.
+	// If website was deleted after our existence check, FK on website_id can still happen.
 	err = mw.websiteTickRepo.Create(ctx, &domain.WebsiteTicks{
 		WebsiteID:      input.WebsiteID,
 		RegionID:       input.RegionID,
@@ -79,34 +74,43 @@ func (mw *MonitoringWorker) CheckAndUpdateStatus(
 		ResponseTimeMs: responseTimeMs,
 	})
 	if err != nil {
+		if isWebsiteTickWebsiteFKErr(err) {
+			log.Printf(
+				"website deleted before tick insert, dropping monitoring job website=%s err=%v",
+				input.WebsiteID,
+				err,
+			)
+			return nil
+		}
 		return err
 	}
 
-	// First ever observation
+	// 2. First-ever observation.
 	if prevStatus == nil {
-		err = mw.websiteRepo.UpdateWebsiteStatus(
-			ctx,
-			input.WebsiteID,
-			status,
-		)
+		updated, err := mw.updateWebsiteStatusIfExists(ctx, input.WebsiteID, status)
 		if err != nil {
 			return err
 		}
-
-		_ = mw.redis.SetCurrentStatus(ctx, input.WebsiteID, status)
+		if !updated {
+			log.Printf("website deleted before initial status update website=%s", input.WebsiteID)
+			return nil
+		}
 		return nil
 	}
 
-	// Status transition detected
 	log.Println("Prev Status Transition", *prevStatus)
 	log.Println("Current Status", status)
+
+	// 3. Transition detected.
 	if *prevStatus != status {
-		err = mw.websiteRepo.UpdateWebsiteStatus(ctx, input.WebsiteID, status)
+		updated, err := mw.updateWebsiteStatusIfExists(ctx, input.WebsiteID, status)
 		if err != nil {
 			return err
 		}
-
-		_ = mw.redis.SetCurrentStatus(ctx, input.WebsiteID, status)
+		if !updated {
+			log.Printf("website deleted before transition status update website=%s", input.WebsiteID)
+			return nil
+		}
 
 		var regionID *string
 		if input.RegionID != "" {
@@ -122,6 +126,8 @@ func (mw *MonitoringWorker) CheckAndUpdateStatus(
 			occurredAt,
 		)
 		if err != nil {
+			// Optional: if your incident flow later returns website-not-found,
+			// you can also swallow that here. For now keep other errors visible.
 			return err
 		}
 
@@ -135,5 +141,47 @@ func (mw *MonitoringWorker) CheckAndUpdateStatus(
 			log.Println("Failed to push status change event", err)
 		}
 	}
+
 	return nil
+}
+
+func (mw *MonitoringWorker) websiteStillExists(
+	ctx context.Context,
+	websiteID string,
+) (bool, error) {
+	_, err := mw.websiteRepo.GetByID(ctx, websiteID)
+	if err != nil {
+		if errors.Is(err, domain.ErrWebsiteNotFound) || errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
+
+func (mw *MonitoringWorker) updateWebsiteStatusIfExists(
+	ctx context.Context,
+	websiteID string,
+	status domain.WebsiteStatus,
+) (bool, error) {
+	err := mw.websiteRepo.UpdateWebsiteStatus(ctx, websiteID, status)
+	if err != nil {
+		if errors.Is(err, domain.ErrWebsiteNotFound) || errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	_ = mw.redis.SetCurrentStatus(ctx, websiteID, status)
+	return true, nil
+}
+
+func isWebsiteTickWebsiteFKErr(err error) bool {
+	var pqErr *pq.Error
+	if !errors.As(err, &pqErr) {
+		return false
+	}
+
+	return string(pqErr.Code) == "23503" &&
+		pqErr.Constraint == "website_ticks_website_id_fkey"
 }

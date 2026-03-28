@@ -120,29 +120,23 @@ func (r *websiteRepository) GetByID(
 	ctx context.Context,
 	websiteID string,
 ) (*domain.Website, error) {
-
 	query := `
-	SELECT id , url, user_id, slug, time_added, current_status
-	FROM website 
-	WHERE id = $1
+		SELECT id, url, user_id, slug, time_added, current_status
+		FROM website
+		WHERE id = $1
 	`
 
 	var website domain.Website
-
-	err := r.db.QueryRowxContext(
-		ctx,
-		query,
-		websiteID,
-	).StructScan(&website)
-
+	err := r.db.QueryRowxContext(ctx, query, websiteID).StructScan(&website)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, domain.ErrWebsiteNotFound
+		}
 		return nil, err
 	}
 
 	return &website, nil
-
 }
-
 func (r *websiteRepository) DeleteByIdAndUserId(
 	ctx context.Context,
 	websiteID string,

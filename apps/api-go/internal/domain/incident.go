@@ -6,6 +6,7 @@ type Incident struct {
 	ID            string
 	WebsiteID     string
 	RegionID      *string
+	RegionName    *string
 	StartedAt     time.Time
 	ResolvedAt    *time.Time
 	CurrentStatus WebsiteStatus
