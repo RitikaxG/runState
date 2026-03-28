@@ -5,6 +5,8 @@ import { useWebsitesStore } from '../stores/website-store'
 import { useUIStore } from '../stores/ui-store'
 import { parseErrorMessage } from '../lib/utils'
 
+const DASHBOARD_POLL_INTERVAL_MS = 15000
+
 export function useDashboard() {
   const {
     websites,
@@ -18,7 +20,15 @@ export function useDashboard() {
   const { addWebsiteModalOpen, setAddWebsiteModalOpen, showToast } = useUIStore()
 
   useEffect(() => {
-    fetchWebsites()
+    void fetchWebsites()
+
+    const intervalId = window.setInterval(() => {
+      void fetchWebsites()
+    }, DASHBOARD_POLL_INTERVAL_MS)
+
+    return () => {
+      window.clearInterval(intervalId)
+    }
   }, [fetchWebsites])
 
   const handleAddWebsite = async (url: string) => {
@@ -26,6 +36,7 @@ export function useDashboard() {
       await createWebsite(url)
       showToast('Website added successfully', 'success')
       setAddWebsiteModalOpen(false)
+      await fetchWebsites()
     } catch (err) {
       showToast(parseErrorMessage(err), 'error')
       throw err
@@ -36,6 +47,7 @@ export function useDashboard() {
     try {
       await deleteWebsite(id)
       showToast('Website deleted successfully', 'success')
+      await fetchWebsites()
     } catch (err) {
       showToast(parseErrorMessage(err), 'error')
       throw err

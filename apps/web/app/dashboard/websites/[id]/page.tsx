@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useWebsiteDetail } from '../../../../hooks/use-website-detail'
 import { Card, CardHeader, CardBody } from '../../../../components/common/card'
 import { Button } from '../../../../components/common/button'
@@ -15,33 +15,43 @@ import { ResponseTimeChart } from '../../../../components/website/response-time-
 import { formatDateTime, formatResponseTime } from '../../../../lib/utils'
 import { ROUTES } from '../../../../lib/constants'
 
-export default function WebsiteDetailPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default function WebsiteDetailPage() {
   const router = useRouter()
+  const params = useParams()
+
+  const websiteId =
+    typeof params.id === 'string'
+      ? params.id
+      : Array.isArray(params.id)
+        ? params.id[0]
+        : ''
 
   const {
     website,
-
     checks,
     responseTimes,
     incidents,
     notifications,
-
     isLoadingDetail,
     isLoadingChecks,
     isLoadingResponseTimes,
     isLoadingIncidents,
     isLoadingNotifications,
-
     detailError,
     checksError,
     responseTimesError,
     incidentsError,
     notificationsError,
-  } = useWebsiteDetail(params.id)
+  } = useWebsiteDetail(websiteId)
+
+  if (!websiteId) {
+    return (
+      <ErrorState
+        message="Website id is missing from the route."
+        onRetry={() => router.push(ROUTES.DASHBOARD)}
+      />
+    )
+  }
 
   if (isLoadingDetail) {
     return <LoadingState />
@@ -57,17 +67,15 @@ export default function WebsiteDetailPage({
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-start justify-between">
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="mb-2 text-4xl font-bold text-gray-900">{website.url}</h1>
-
-          <div className="flex items-center gap-4">
-            <StatusBadge status={website.currentStatus} size="lg" />
-            <span className="text-gray-600">
-              Added: {formatDateTime(website.timeAdded)}
-            </span>
-          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+            {website.url}
+          </h1>
+          <p className="mt-2 text-sm text-slate-600">
+            Added: {formatDateTime(website.timeAdded)}
+          </p>
         </div>
 
         <Button
@@ -78,65 +86,82 @@ export default function WebsiteDetailPage({
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Card>
+          <CardHeader>
+            <h3 className="text-sm font-medium text-slate-600">Current Status</h3>
+          </CardHeader>
           <CardBody>
-            <p className="text-sm text-gray-500">Current Status</p>
-            <div className="mt-3">
-              <StatusBadge status={website.currentStatus} size="md" />
-            </div>
+            <StatusBadge status={website.currentStatus} />
           </CardBody>
         </Card>
 
         <Card>
+          <CardHeader>
+            <h3 className="text-sm font-medium text-slate-600">Last Checked</h3>
+          </CardHeader>
           <CardBody>
-            <p className="text-sm text-gray-500">Last Checked</p>
-            <p className="mt-3 text-base font-semibold text-gray-900">
-              {website.lastCheckedAt ? formatDateTime(website.lastCheckedAt) : 'Never'}
+            <p className="text-sm text-slate-700">
+              {website.lastCheckedAt
+                ? formatDateTime(website.lastCheckedAt)
+                : 'Never'}
             </p>
           </CardBody>
         </Card>
 
         <Card>
+          <CardHeader>
+            <h3 className="text-sm font-medium text-slate-600">
+              Latest Response Time
+            </h3>
+          </CardHeader>
           <CardBody>
-            <p className="text-sm text-gray-500">Latest Response Time</p>
-            <p className="mt-3 text-base font-semibold text-gray-900">
-              {formatResponseTime(website.latestResponseTimeMs)}
+            <p className="text-sm text-slate-700">
+              {website.latestResponseTimeMs != null
+                ? formatResponseTime(website.latestResponseTimeMs)
+                : '—'}
             </p>
           </CardBody>
         </Card>
 
         <Card>
+          <CardHeader>
+            <h3 className="text-sm font-medium text-slate-600">
+              Incident Status
+            </h3>
+          </CardHeader>
           <CardBody>
-            <p className="text-sm text-gray-500">Incident Status</p>
-            <p
-              className={`mt-3 text-base font-semibold ${
-                website.activeIncident?.isActive ? 'text-red-600' : 'text-green-600'
-              }`}
-            >
-              {website.activeIncident?.isActive ? 'Active Incident' : 'No Active Incident'}
-            </p>
-            {website.activeIncident?.isActive && (
-              <p className="mt-1 text-sm text-gray-500">
-                Started {formatDateTime(website.activeIncident.startedAt)}
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-slate-900">
+                {website.activeIncident?.isActive
+                  ? 'Active Incident'
+                  : 'No Active Incident'}
               </p>
-            )}
-          </CardBody>
-        </Card>
 
-        <Card>
-          <CardBody>
-            <p className="text-sm text-gray-500">Monitor Created</p>
-            <p className="mt-3 text-base font-semibold text-gray-900">
-              {formatDateTime(website.timeAdded)}
-            </p>
+              {website.activeIncident?.isActive && (
+                <p className="text-xs text-slate-500">
+                  Started {formatDateTime(website.activeIncident.startedAt)}
+                </p>
+              )}
+            </div>
           </CardBody>
         </Card>
       </div>
 
       <Card>
         <CardHeader>
-          <h2 className="text-2xl font-bold text-gray-900">Response Time</h2>
+          <h3 className="text-sm font-medium text-slate-600">Monitor Created</h3>
+        </CardHeader>
+        <CardBody>
+          <p className="text-sm text-slate-700">
+            {formatDateTime(website.timeAdded)}
+          </p>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <h3 className="text-lg font-semibold text-slate-900">Response Time</h3>
         </CardHeader>
         <CardBody>
           {isLoadingResponseTimes ? (
@@ -145,9 +170,8 @@ export default function WebsiteDetailPage({
             <ErrorState message={responseTimesError} />
           ) : responseTimes.length === 0 ? (
             <EmptyState
-              title="No response time data"
-              description="Response time points will appear once checks start running."
-              icon="📈"
+              title="No response time data yet"
+              description="Response time metrics will appear after monitoring checks run."
             />
           ) : (
             <ResponseTimeChart data={responseTimes} />
@@ -157,7 +181,7 @@ export default function WebsiteDetailPage({
 
       <Card>
         <CardHeader>
-          <h2 className="text-2xl font-bold text-gray-900">Recent Checks</h2>
+          <h3 className="text-lg font-semibold text-slate-900">Recent Checks</h3>
         </CardHeader>
         <CardBody>
           {isLoadingChecks ? (
@@ -167,8 +191,7 @@ export default function WebsiteDetailPage({
           ) : checks.length === 0 ? (
             <EmptyState
               title="No checks yet"
-              description="Checks will appear once monitoring starts."
-              icon="⏳"
+              description="Recent monitoring checks will appear here."
             />
           ) : (
             <ChecksTable checks={checks} />
@@ -178,7 +201,7 @@ export default function WebsiteDetailPage({
 
       <Card>
         <CardHeader>
-          <h2 className="text-2xl font-bold text-gray-900">Incidents</h2>
+          <h3 className="text-lg font-semibold text-slate-900">Incidents</h3>
         </CardHeader>
         <CardBody>
           {isLoadingIncidents ? (
@@ -188,8 +211,7 @@ export default function WebsiteDetailPage({
           ) : incidents.length === 0 ? (
             <EmptyState
               title="No incidents"
-              description="This website has no recorded incidents yet."
-              icon="✅"
+              description="Incident history will appear here when downtime is detected."
             />
           ) : (
             <IncidentsList incidents={incidents} />
@@ -199,7 +221,7 @@ export default function WebsiteDetailPage({
 
       <Card>
         <CardHeader>
-          <h2 className="text-2xl font-bold text-gray-900">Notifications</h2>
+          <h3 className="text-lg font-semibold text-slate-900">Notifications</h3>
         </CardHeader>
         <CardBody>
           {isLoadingNotifications ? (
@@ -209,8 +231,7 @@ export default function WebsiteDetailPage({
           ) : notifications.length === 0 ? (
             <EmptyState
               title="No notifications"
-              description="No alerts have been sent for this website yet."
-              icon="📭"
+              description="Sent notification history will appear here."
             />
           ) : (
             <NotificationsList notifications={notifications} />

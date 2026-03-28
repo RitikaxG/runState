@@ -11,19 +11,22 @@ export function Topbar() {
   const initial = user?.email?.charAt(0).toUpperCase() ?? 'U'
 
   return (
-    <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
+    <header className="sticky top-0 z-30 flex h-16 items-center border-b border-slate-200 bg-white/90 px-4 backdrop-blur sm:px-6 lg:px-8">
       <button
-        type="button"
         onClick={toggleSidebar}
+        className="mr-3 rounded-md p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
         aria-label="Toggle sidebar"
-        className="rounded-lg p-2 transition hover:bg-gray-100"
       >
         ☰
       </button>
 
-      <div className="flex items-center gap-4">
-        <span className="text-gray-700">{email}</span>
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 font-bold text-white">
+      <div className="flex-1">
+        <h1 className="text-sm font-medium text-slate-600">Monitoring Dashboard</h1>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <div className="hidden text-sm text-slate-600 sm:block">{email}</div>
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
           {initial}
         </div>
       </div>

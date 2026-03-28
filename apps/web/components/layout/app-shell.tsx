@@ -59,8 +59,8 @@ export function AppShell({ children }: AppShellProps) {
 
   if (!isHydrated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <p className="text-sm text-gray-500">Loading session...</p>
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-sm text-slate-600">
+        Loading session...
       </div>
     )
   }
@@ -70,14 +70,16 @@ export function AppShell({ children }: AppShellProps) {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       <Sidebar />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="lg:pl-64">
         <Topbar />
 
-        <main className="flex-1 overflow-auto">
-          <div className="p-6">{children}</div>
+        <main className="px-4 py-6 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            {children}
+          </div>
         </main>
       </div>
 
