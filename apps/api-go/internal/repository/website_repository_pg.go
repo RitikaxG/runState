@@ -87,7 +87,7 @@ func (r *websiteRepository) Create(ctx context.Context, website *domain.Website)
 	query := `
 	INSERT INTO website (user_id, url, slug)
 	VALUES ($1, $2, $3) 
-	RETURNING id, user_id, url,slug, time_added
+	RETURNING id, user_id, url,slug, time_added, current_status
 	`
 
 	err := r.db.QueryRowxContext(
@@ -96,7 +96,7 @@ func (r *websiteRepository) Create(ctx context.Context, website *domain.Website)
 		website.UserID,
 		website.URL,
 		website.Slug,
-	).Scan(&website.ID, &website.UserID, &website.URL, &website.TimeAdded)
+	).Scan(&website.ID, &website.UserID, &website.URL, &website.Slug, &website.TimeAdded, &website.CurrentStatus)
 
 	if err != nil {
 		/*

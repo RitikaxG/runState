@@ -215,10 +215,15 @@ func (h *WebsiteHandler) CreateWebsite(c *gin.Context) {
 		return
 	}
 
+	currentStatus := "unknown"
+	if website.CurrentStatus != nil {
+		currentStatus = string(*website.CurrentStatus)
+	}
+
 	websiteDTO := dto.WebsiteDetailResponse{
 		ID:                   website.ID,
 		URL:                  website.URL,
-		CurrentStatus:        string(*website.CurrentStatus),
+		CurrentStatus:        currentStatus,
 		TimeAdded:            website.TimeAdded,
 		LastCheckedAt:        nil,
 		LatestResponseTimeMs: nil,
@@ -232,7 +237,9 @@ func (h *WebsiteHandler) CreateWebsite(c *gin.Context) {
 	c.JSON(http.StatusCreated, response.APIResponse{
 		Success: true,
 		Message: "website successfully created",
-		Data:    websiteDTO,
+		Data: dto.CreateWebsiteResponse{
+			Website: websiteDTO,
+		},
 	})
 }
 
