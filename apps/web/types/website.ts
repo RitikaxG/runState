@@ -15,6 +15,7 @@ export type Incident = {
   id: string
   websiteId: string
   regionId: string | null
+  regionName: string | null
   startedAt: string
   resolvedAt: string | null
   isActive: boolean

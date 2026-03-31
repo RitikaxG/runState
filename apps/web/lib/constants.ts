@@ -36,6 +36,7 @@ export const ROUTES = {
   SIGNIN: '/signin',
   SIGNUP: '/signup',
   DASHBOARD: '/dashboard',
+  ADMIN_DASHBOARD: '/dashboard/admin',
   WEBSITE_DETAIL: (id: string) => `/dashboard/websites/${id}`,
   STATUS_PAGE: (slug: string) => `/status/${slug}`,
 } as const

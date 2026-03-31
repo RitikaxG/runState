@@ -1,4 +1,4 @@
-import type { WebsiteStatus } from "../types/common"
+import type { WebsiteStatus } from '../types/common'
 
 export function formatDateTime(dateString: string | null | undefined): string {
   if (!dateString) return '—'
@@ -19,6 +19,23 @@ export function formatDateTime(dateString: string | null | undefined): string {
   })
 }
 
+export function formatCheckTime(dateString: string | null | undefined): string {
+  if (!dateString) return '—'
+
+  const date = new Date(dateString)
+
+  if (Number.isNaN(date.getTime())) {
+    return 'Invalid time'
+  }
+
+  return date.toLocaleTimeString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  })
+}
+
 export function formatTime(dateString: string | null | undefined): string {
   if (!dateString) return '—'
 
@@ -28,7 +45,8 @@ export function formatTime(dateString: string | null | undefined): string {
     return 'Invalid time'
   }
 
-  return date.toLocaleTimeString('en-US', {
+  return date.toLocaleTimeString('en-IN', {
+    timeZone: 'Asia/Kolkata',
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',

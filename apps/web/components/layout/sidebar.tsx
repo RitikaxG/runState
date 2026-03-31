@@ -6,13 +6,36 @@ import { useUIStore } from '../../stores/ui-store'
 import { useAuth } from '../../hooks/use-auth'
 import { ROUTES } from '../../lib/constants'
 
+type NavItem = {
+  label: string
+  href: string
+  isActive: (pathname: string) => boolean
+}
+
 export function Sidebar() {
   const pathname = usePathname()
   const { sidebarOpen, setSidebarOpen } = useUIStore()
-  const { logout } = useAuth()
+  const { user, logout } = useAuth()
 
-  const navItems = [
-    { label: 'Dashboard', href: ROUTES.DASHBOARD },
+  const navItems: NavItem[] = [
+    {
+      label: 'Dashboard',
+      href: ROUTES.DASHBOARD,
+      isActive: (currentPath) =>
+        currentPath === ROUTES.DASHBOARD ||
+        currentPath.startsWith('/dashboard/websites/'),
+    },
+    ...(user?.role === 'ADMIN'
+      ? [
+          {
+            label: 'Admin',
+            href: ROUTES.ADMIN_DASHBOARD,
+            isActive: (currentPath: string) =>
+              currentPath === ROUTES.ADMIN_DASHBOARD ||
+              currentPath.startsWith(`${ROUTES.ADMIN_DASHBOARD}/`),
+          },
+        ]
+      : []),
   ]
 
   const handleLogout = async () => {
@@ -45,7 +68,7 @@ export function Sidebar() {
 
         <nav className="space-y-1 p-4">
           {navItems.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
+            const active = item.isActive(pathname)
 
             return (
               <Link

@@ -55,6 +55,7 @@ export type IncidentSummaryDTO = {
   id: string
   website_id: string
   region_id: string | null
+  region_name: string | null
   started_at: string
   resolved_at: string | null
   is_active: boolean
@@ -114,6 +115,7 @@ export type IncidentResponseDTO = {
   id: string
   website_id: string
   region_id: string | null
+  region_name: string | null
   started_at: string
   resolved_at: string | null
   is_active: boolean
@@ -149,3 +151,11 @@ export type PublicStatusWebsiteItemDTO = {
 export type GetPublicStatusPageResponse = APIResponse<{
   websites: PublicStatusWebsiteItemDTO[]
 }>
+
+export type AdminUserDTO = {
+  id: string
+  email: string
+  role: UserRole
+}
+
+export type GetAdminUsersResponse = APIResponse<AdminUserDTO[]>

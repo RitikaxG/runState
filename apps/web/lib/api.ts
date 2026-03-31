@@ -11,6 +11,7 @@ import type {
   GetWebsiteIncidentsResponse,
   GetWebsiteNotificationsResponse,
   GetPublicStatusPageResponse,
+  GetAdminUsersResponse,
   APIResponse,
 } from '../types/api'
 
@@ -202,6 +203,12 @@ export const websiteAPI = {
       token
     )
   },
+}
+
+// admin
+export const adminAPI = {
+  getUsers: (token: string) =>
+    makeRequest<GetAdminUsersResponse>('/admin/users', { method: 'GET' }, token),
 }
 
 // public

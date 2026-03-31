@@ -35,7 +35,7 @@ export function Input({
         disabled={disabled}
         aria-invalid={Boolean(error)}
         aria-describedby={descriptionId}
-        className={`rounded-lg border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-60 ${
+        className={`rounded-lg border bg-white px-4 py-2 text-gray-900 placeholder:text-gray-400 caret-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 disabled:opacity-60 ${
           error ? 'border-red-500' : 'border-gray-300'
         } ${className}`}
         {...props}

@@ -47,9 +47,9 @@ export function IncidentsList({ incidents }: IncidentsListProps) {
                   Duration: {formatDuration(incident.durationSeconds)}
                 </p>
 
-                {incident.regionId && (
+                {(incident.regionName || incident.regionId) && (
                   <p className="text-sm text-gray-600">
-                    Region: {incident.regionId}
+                    Region: {incident.regionName ?? incident.regionId}
                   </p>
                 )}
               </div>
