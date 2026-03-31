@@ -20,9 +20,9 @@ Modern Next.js frontend for the RunState website monitoring platform.
 ## Setup
 
 ```bash
-npm install
+bun install
 cp .env.local.example .env.local
-npm run dev
+bun run dev
 ```
 
 Frontend runs on `http://localhost:3000`.
@@ -32,7 +32,7 @@ Frontend runs on `http://localhost:3000`.
 ## Environment variable
 
 ```bash
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api/v1
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3001/api/v1
 ```
 
 ---
@@ -40,8 +40,8 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api/v1
 ## Build
 
 ```bash
-npm run build
-npm start
+bun run build
+bun start
 ```
 
 ---
