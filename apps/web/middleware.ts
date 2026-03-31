@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const AUTH_ROUTES = ['/signin','/signup']
+const AUTH_ROUTES = ['/signin', '/signup']
 const PROTECTED_ROUTES = ['/dashboard']
 
 export function middleware(request: NextRequest) {
@@ -11,14 +11,15 @@ export function middleware(request: NextRequest) {
   const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
     pathname.startsWith(route)
   )
-
   const isAuthRoute = AUTH_ROUTES.includes(pathname)
 
   if (isProtectedRoute && !token) {
     return NextResponse.redirect(new URL('/signin', request.url))
   }
 
-  if ((pathname === '/' || isAuthRoute) && token) {
+  // Keep sign in / sign up blocked when already authenticated,
+  // but allow "/" to stay public so the landing page renders.
+  if (isAuthRoute && token) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
