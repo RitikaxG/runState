@@ -38,3 +38,13 @@ yarn-error.log*
 dist/
 
 docs/demo/runstate-demo.mp4
+
+.git
+.github
+node_modules
+**/node_modules
+.turbo
+**/.next
+**/dist
+.env
+.env.local

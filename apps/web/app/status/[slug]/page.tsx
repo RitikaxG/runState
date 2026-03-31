@@ -33,6 +33,10 @@ export default function StatusPage({
         setError(null)
 
         const response = await publicAPI.getStatusPage(params.slug)
+        if (!response.success) {
+          throw new Error(response.error || 'Failed to load status page')
+        }
+
         const websites = response.data?.websites ?? []
 
         setData({
