@@ -45,7 +45,7 @@ COPY --from=builder /out/worker-notification /worker-notification
 # COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 # API server port (documentation only; publishing happens in compose/k8s)
-EXPOSE 8080
+EXPOSE 3001
 
 USER nonroot:nonroot
 

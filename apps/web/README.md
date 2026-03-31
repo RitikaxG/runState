@@ -1,90 +1,108 @@
 # RunState Frontend
 
-Modern Next.js frontend for RunState website monitoring platform.
+Modern Next.js frontend for the RunState website monitoring platform.
+
+## What it includes
+
+- sign in / sign up flows
+- user dashboard with personal monitored websites
+- website detail pages with:
+  - current status
+  - recent checks
+  - response-time chart
+  - incidents
+  - notification history
+- admin dashboard with global website visibility
+- admin console with registered users, roles, and monitored websites
+
+---
 
 ## Setup
 
 ```bash
-# Install dependencies
 npm install
-
-# Set environment variables
 cp .env.local.example .env.local
-
-# Start development server
 npm run dev
 ```
 
-## Build & Deploy
+Frontend runs on `http://localhost:3000`.
+
+---
+
+## Environment variable
+
+```bash
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api/v1
+```
+
+---
+
+## Build
 
 ```bash
 npm run build
 npm start
 ```
 
-## Architecture
+---
 
-### Directory Structure
+## Directory structure
 
-- **app/** - Next.js pages and layouts (App Router)
-- **components/** - Reusable React components
-- **lib/** - Utilities, API client, helpers
+- **app/** - Next.js pages and layouts
+- **components/** - reusable UI components
+- **lib/** - API client, helpers, constants
 - **stores/** - Zustand state management
-- **types/** - TypeScript type definitions
-- **hooks/** - Custom React hooks
+- **types/** - shared TypeScript types
+- **hooks/** - custom React hooks
 
-### State Management
+---
 
-Three Zustand stores:
+## State management
 
-1. **auth-store** - User authentication & tokens
-2. **websites-store** - Website data & monitoring info
-3. **ui-store** - UI state (modals, toasts, sidebar)
+Three Zustand stores power the frontend:
 
-### API Integration
+1. **auth-store** - authentication, user, tokens, hydration
+2. **websites-store** - websites list and detail data
+3. **ui-store** - modal, toast, and UI state
 
-- Single API client in `lib/api.ts`
-- Typed API responses matching backend DTOs
-- Automatic Bearer token injection
-- Error handling with custom `APIError` class
+---
 
-### Styling
+## API integration
 
-- Tailwind CSS for styling
-- Custom components with variant support
-- Mobile-responsive design
+- single API client in `lib/api.ts`
+- typed request/response handling
+- bearer token injection
+- refresh-token based auth flow
+- custom API error handling
 
-## Key Features
+---
 
-- ✅ User authentication (signin/signup)
-- ✅ Protected dashboard
-- ✅ Website CRUD operations
-- ✅ Real-time status monitoring
-- ✅ Response time tracking
-- ✅ Incident history
-- ✅ Notification logs
-- ✅ Public status page
-- ✅ Toast notifications
-- ✅ Loading/error states
+## Styling
 
-## Development Tips
+- Tailwind CSS
+- reusable UI primitives
+- responsive dashboard layout
 
-1. Run both backend and frontend:
-   ```bash
-   # Terminal 1 - Backend
-   cd apps/api-go
-   go run main.go
+---
 
-   # Terminal 2 - Frontend
-   cd apps/web
-   npm run dev
-   ```
+## Feature views
 
-2. Frontend runs on `http://localhost:3000`
-3. Backend API on `http://localhost:8080/api/v1`
+### Sign in
+![Sign In](../../docs/frontend/signin.png)
 
-## Environment Variables
+### Sign up
+![Sign Up](../../docs/frontend/signup.png)
 
-```
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api/v1
-```
+### User dashboard
+![User Dashboard](../../docs/frontend/user-dashboard.png)
+
+### Website details
+![Website Status Overview](../../docs/frontend//website-status-overview.png)
+![Recent Checks](../../docs/frontend//website-recent-checks.png)
+![Incidents and Notifications](../../docs/frontend/website-incidents-notifications.png)
+
+### Admin console
+![Admin Console](../../docs/frontend/admin-console.png)
+
+### Admin dashboard
+![Admin Dashboard](../../docs/frontend/admin-dashboard.png)
