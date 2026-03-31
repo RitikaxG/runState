@@ -90,7 +90,7 @@ New users can create an account and start adding websites to monitor.
 ### User dashboard
 Each user gets a personal dashboard showing only their monitored websites, current status, latest response time, and last check time.
 
-![User Dashboard](./docs/frontend/user-dashboard.png![alt text](image.png))
+![User Dashboard](./docs/frontend/user-dashboard.png)
 
 ### Website status page
 Each website has a detail page showing its current status, latest response time, recent checks, response-time chart, incidents, and notifications.
