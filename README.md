@@ -2,6 +2,10 @@
 
 **Production-style uptime monitoring platform inspired by BetterUptime — built with Go, Redis Streams, Postgres, Next.js, Docker, and Kubernetes/GitOps.**
 
+## Demo
+
+[![Watch the RunState demo](./docs/demo/thumbnail.png)](https://x.com/RitikaxG/status/2038948466790174967?s=20)
+
 RunState monitors websites at regular intervals, stores uptime and response-time history, tracks incidents, persists notification events, and exposes a full frontend dashboard for both users and admins.
 
 ![Monitoring Pipeline](./docs/architecture/monitoring_stream.png)

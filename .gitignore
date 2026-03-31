@@ -36,3 +36,5 @@ yarn-error.log*
 
 # ui
 dist/
+
+docs/demo/runstate-demo.mp4
