@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+	log.Printf("Starting monitoring pusher")
 	_ = godotenv.Load()
 
 	dbConn := db.NewPostgres(os.Getenv("DATABASE_URL"))
